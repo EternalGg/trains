@@ -56,23 +56,6 @@ func SilentMonitor(hero *mc.Hero) *mc.Monitor {
 	}
 }
 
-// 净化
-func PurificationMonitor(hero *mc.Hero) *mc.Monitor {
-	return &mc.Monitor{
-		MID: monitorfile.MonitorIdMap("被净化"),
-		Tid: 0,
-		MonitorLicense: mc.MonitorLicense{
-			Type:    monitorfile.MonitorIdMap("被净化"),
-			Owner:   hero,
-			Subject: monitorfile.OwnerMap("自己"),
-		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     []*mc.Monitor{},
-		BrotherMonitor: []*mc.Monitor{},
-	}
-}
-
 // 生成一个默认英雄的monitor 含带最基础的死亡以及放逐monitor
 func GeneralHeroMonitor(hero *mc.Hero, mcc *mc.MonitorCenter) (m1, m2 *mc.Monitor) {
 	mcc.HeroMap[hero.Id] = hero
