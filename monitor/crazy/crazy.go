@@ -28,10 +28,8 @@ func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("自己"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     nil,
-		BrotherMonitor: nil,
+		ListenerList: nil,
+		Froze:        false,
 	}
 	result = append(result, &selfMonitor)
 	teamMonitor := mc.Monitor{
@@ -42,10 +40,8 @@ func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("己方单位不包含自己"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     nil,
-		BrotherMonitor: nil,
+		ListenerList: nil,
+		Froze:        false,
 	}
 	result = append(result, &teamMonitor)
 	enemyMonitor := mc.Monitor{
@@ -56,10 +52,8 @@ func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("敌方单位"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     nil,
-		BrotherMonitor: nil,
+		ListenerList: nil,
+		Froze:        false,
 	}
 	result = append(result, &enemyMonitor)
 	return result
@@ -69,7 +63,5 @@ func CrazyMonitorInit(hero *mc.Hero, mcc *mc.MonitorCenter) {
 	mcc.AddHeroInHeroMap(hero)
 	cl := CrazyMonitorLicense(hero)
 	mcc.AddMonitorList(cl)
-	dead, exile := general.GeneralHeroMonitor(hero, mcc)
-	dead.SonMonitorAdd(cl)
-	exile.SonMonitorAdd(cl)
+	general.GeneralHeroMonitor(hero, mcc)
 }

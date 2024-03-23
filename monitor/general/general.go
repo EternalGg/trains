@@ -15,10 +15,8 @@ func DeadMonitor(hero *mc.Hero) *mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("自己"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     []*mc.Monitor{},
-		BrotherMonitor: []*mc.Monitor{},
+		ListenerList: nil,
+		Froze:        false,
 	}
 }
 
@@ -32,10 +30,8 @@ func ExileMonitor(hero *mc.Hero) *mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("自己"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     []*mc.Monitor{},
-		BrotherMonitor: []*mc.Monitor{},
+		ListenerList: nil,
+		Froze:        false,
 	}
 }
 
@@ -49,10 +45,8 @@ func SilentMonitor(hero *mc.Hero) *mc.Monitor {
 			Owner:   hero,
 			Subject: monitorfile.OwnerMap("自己"),
 		},
-		ListenerList:   nil,
-		Froze:          false,
-		SonMonitor:     []*mc.Monitor{},
-		BrotherMonitor: []*mc.Monitor{},
+		ListenerList: nil,
+		Froze:        false,
 	}
 }
 
@@ -62,9 +56,11 @@ func GeneralHeroMonitor(hero *mc.Hero, mcc *mc.MonitorCenter) (m1, m2 *mc.Monito
 	dead := DeadMonitor(hero)
 	exile := ExileMonitor(hero)
 	//brother relationship
-	dead.BrotherMonitor = append(dead.BrotherMonitor, exile)
-	exile.BrotherMonitor = append(exile.BrotherMonitor, dead)
-	//son relationship
 	mcc.AddMonitorList([]*mc.Monitor{dead, exile})
 	return dead, exile
+}
+
+func Attack(attacker, object *mc.Hero, mcc *mc.MonitorCenter) {
+	mcc.ListenAndFilter(attacker.Id, monitorfile.MonitorIdMap("攻击"))
+	mcc.ListenAndFilter(object.Id, monitorfile.MonitorIdMap("被攻击"))
 }

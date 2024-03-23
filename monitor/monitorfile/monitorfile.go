@@ -36,7 +36,6 @@ func MonitorIdMap(str string) uint {
 		return 17
 	default:
 		return 0
-
 	}
 }
 
