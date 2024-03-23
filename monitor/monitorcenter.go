@@ -1,7 +1,9 @@
 package monitorcenter
 
 import (
-	"fmt"
+	"math/rand"
+	"strconv"
+	"time"
 	"train/monitor/monitorfile"
 )
 
@@ -15,28 +17,55 @@ type (
 	}
 
 	MonitorCenter struct {
-		GID                uint                //游戏房间Id
-		HeroMap            map[uint]*Hero      //根据hero id 查找英雄
-		MonitorMap         map[uint]*Monitor   //根据monitor id索引monitor
-		TypeMappingMonitor map[uint][]*Monitor //根据行动的id 查询monitor数组
+		GID        uint              //游戏房间Id
+		HeroMap    map[uint]*Hero    //根据hero id 查找英雄
+		MonitorMap map[uint]*Monitor //根据monitor id索引monitor
+		//MonitorLogs []string          //记录monitor 所有发生的事情
 	}
 
 	Monitor struct {
-		MID uint // monitor id 根据id鉴别monitor
-		Tid uint
+		MID          uint           // monitor id 根据id鉴别monitor
+		Tid          uint           // 临时id
+		ListenerList map[uint]*Hero // 对应Hero id的task map 多对一中的多
+		Froze        bool           // 是否暂停中
+		Logs         []string       // 发生了什么
+		IsForever    bool           // 是否是永久
+		Time         uint           // 持续时间
+		Bubble       map[uint]int   // buff属性的增加减少
 		MonitorLicense
-		ListenerList   map[uint]*Hero // 对应Hero id的task map 多对一中的多
-		Froze          bool           // 是否暂停中
-		SonMonitor     []*Monitor
-		BrotherMonitor []*Monitor
 	}
 	MonitorLicense struct {
 		Type    uint  // 订阅条件type 当canChange后 登场....
 		Owner   *Hero // hero
 		Subject uint  // 可订阅的英雄类型：属于谁的规则 0 全部 1 友军 2 中立 3 敌人 ...
 	}
-	Listener interface {
-		Filter()
+	MonitorSummary struct {
+		Name    uint         // monitor name
+		Summary map[uint]int // 属性
+	}
+)
+
+// Attack 总攻击类
+type (
+	PreAttackMonitor struct {
+		Changes []MonitorSummary //攻击前会发生什么
+	}
+	BeforeAttackMonitor struct {
+		Changes []MonitorSummary //攻击前会发生什么
+	}
+	SessionsAttack struct {
+		Name string
+		PreAttackMonitor
+		BeforeAttackMonitor
+	}
+	PreAttackCalculate struct {
+		BaseDamage         int  // 基础攻击力
+		DamageAddition     int  // 攻击加成
+		CriticalHitRate    int  // 暴击概率
+		CriticalStrikeRate int  // 暴击倍率加成 0为100%暴击率（无暴击）
+		OtherDamage        int  // 固定伤害加成
+		IsCritical         bool // 是否暴击
+		FinalDamage        int  // 最终伤害
 	}
 )
 
@@ -69,71 +98,63 @@ func (mc *MonitorCenter) AddHeroInHeroMap(hero *Hero) {
 	//增加hero到mcHeroMap
 	mc.HeroMap[hero.Id] = hero
 }
-func (mc *MonitorCenter) ListenAndFilter(heroId, listenType uint) {
-	for _, monitor := range mc.MonitorMap {
-
-		if monitor.Type == listenType {
-			fmt.Println(monitor.MID, heroId, monitor.Subject)
-			if heroId == monitor.Owner.Id && monitor.Subject == monitorfile.OwnerMap("自己") {
-				//监听自己的监听者
-				mc.Publish(monitor)
-				return
-			}
-			if monitor.Subject == monitorfile.OwnerMap("己方单位不包含自己") && mc.HeroMap[heroId].Owner == monitor.Owner.Owner {
-				// 监听队友的监听者
-				mc.Publish(monitor)
-				return
-			}
-			if monitor.Subject == monitorfile.OwnerMap("己方单位不包含自己") && mc.HeroMap[heroId].Owner != monitor.Owner.Owner && mc.HeroMap[heroId].Owner != monitorfile.OwnerMap("中立") {
-				// 监听对手的监听者
-				mc.Publish(monitor)
-				return
-			}
-			if monitor.Subject == monitorfile.OwnerMap("己方单位不包含自己") && mc.HeroMap[heroId].Owner != monitor.Owner.Owner && mc.HeroMap[heroId].Owner != monitorfile.OwnerMap("地方单位") {
-				// 监听中立单位的监听者
-				mc.Publish(monitor)
-				return
-			}
+func (mc *MonitorCenter) TotalDeleteMonitor(m *Monitor) {
+	//删除相关所有monitor
+	for id, monitor := range mc.MonitorMap {
+		if monitor.Owner.Id == m.Owner.Id {
+			mc.MonitorMap[id] = nil
 		}
 	}
 }
-func (mc *MonitorCenter) DeleteSonMonitor(m *Monitor) {
-	for _, monitor := range m.SonMonitor {
-		mc.MonitorMap[monitor.Tid] = nil
-	}
-	m.SonMonitor = nil
-}
-func (mc *MonitorCenter) DeleteBrotherMonitor(m *Monitor) {
-	for _, monitor := range m.BrotherMonitor {
-		mc.MonitorMap[monitor.Tid] = nil
-	}
-	m.BrotherMonitor = nil
-}
-func (mc *MonitorCenter) TotalDeleteMonitor(m *Monitor) {
-	mc.DeleteSonMonitor(m)
-	mc.DeleteBrotherMonitor(m)
-	mc.MonitorMap[m.Tid] = nil
-}
-func (mc *MonitorCenter) Publish(m *Monitor) {
-	switch m.MID {
-	case monitorfile.MonitorIdMap("狂战士之血"):
-		m.Owner.AttackPoint++
-	case monitorfile.MonitorIdMap("死亡"):
-		//亡语...
-		mc.TotalDeleteMonitor(m)
 
-	case monitorfile.MonitorIdMap("放逐"):
-		mc.TotalDeleteMonitor(m)
+func (mc *MonitorCenter) ListenAndFilter(heroId, listenType uint) (result []*Monitor) {
+	for _, monitor := range mc.MonitorMap {
+		if monitor.Type == listenType {
+			if monitor.Subject == monitorfile.OwnerMap("自己") && heroId == monitor.Owner.Id {
+				//监听自己的监听者
+				result = append(result, monitor)
+			}
+			if monitor.Subject == monitorfile.OwnerMap("己方单位不包含自己") && mc.HeroMap[heroId].Owner == monitor.Owner.Owner && heroId != monitor.Owner.Id {
+				// 监听队友的监听者
+				result = append(result, monitor)
+			}
+			if monitor.Subject == monitorfile.OwnerMap("敌方单位") && mc.HeroMap[heroId].Owner != monitor.Owner.Owner && mc.HeroMap[heroId].Owner != 2 {
+				// 监听对手的监听者
+				result = append(result, monitor)
+			}
+			if monitor.Subject == monitorfile.OwnerMap("中立单位") && mc.HeroMap[heroId].Owner == 2 {
+				// 监听中立单位的监听者
+				result = append(result, monitor)
+			}
+		}
+	}
+	return
+}
+func (mc *MonitorCenter) Publish(ms []*Monitor) {
+	for _, m := range ms {
+		switch m.MID {
+		case monitorfile.MonitorIdMap("狂战士之血"):
+			//time
+			m.Logs = append(m.Logs, "之前攻击力", strconv.Itoa(int(m.Owner.AttackPoint)), "触发了狂战士之血，狂战士攻击+1", "之后攻击力为", strconv.Itoa(int(m.Owner.AttackPoint+1)))
+			m.Owner.AttackPoint++
+		case monitorfile.MonitorIdMap("死亡"):
+			//亡语...
+			//NeedDo 需要顺序
+			mc.TotalDeleteMonitor(m)
+
+		case monitorfile.MonitorIdMap("放逐"):
+			mc.TotalDeleteMonitor(m)
+		case monitorfile.MonitorIdMap("闪避"):
+		}
 	}
 }
 
-func (m *Monitor) SonMonitorAdd(sons []*Monitor) {
-	for _, son := range sons {
-		m.SonMonitor = append(m.SonMonitor, son)
-	}
-}
-func (m *Monitor) BrotherMonitorAdd(Brother []*Monitor) {
-	for _, brothers := range Brother {
-		m.BrotherMonitor = append(m.BrotherMonitor, brothers)
+// RandomByTime 输入概率百分比，返回概率结果
+func RandomByTime(p int) bool {
+	randomTime := time.Unix(int64(rand.Intn(1000000000)), 0)
+	if int64(p) >= ((randomTime.Unix()) % 100) {
+		return true
+	} else {
+		return false
 	}
 }

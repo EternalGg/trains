@@ -3,7 +3,6 @@ package crazy
 import (
 	"fmt"
 	"testing"
-	"time"
 	monitorcenter "train/monitor"
 	"train/monitor/general"
 	"train/monitor/monitorfile"
@@ -39,9 +38,9 @@ func TestCrazyMonitor(t *testing.T) {
 	general.GeneralHeroMonitor(&hero2, mc)
 	CrazyMonitorInit(&crazyHero, mc)
 
-	mc.ListenAndFilter(2, monitorfile.MonitorIdMap("掉血"))
-	mc.ListenAndFilter(3, monitorfile.MonitorIdMap("掉血"))
-	mc.ListenAndFilter(1, monitorfile.MonitorIdMap("掉血"))
-	time.Sleep(1)
+	fmt.Println(mc.ListenAndFilter(2, monitorfile.MonitorIdMap("掉血")))
+	fmt.Println(mc.ListenAndFilter(3, monitorfile.MonitorIdMap("掉血")))
+	fmt.Println(mc.ListenAndFilter(1, monitorfile.MonitorIdMap("掉血")))
+
 	fmt.Println(crazyHero)
 }
