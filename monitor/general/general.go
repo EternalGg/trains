@@ -59,3 +59,8 @@ func GeneralHeroMonitor(hero *mc.Hero, mcc *mc.MonitorCenter) (m1, m2 *mc.Monito
 	mcc.AddMonitorList([]*mc.Monitor{dead, exile})
 	return dead, exile
 }
+
+func Attack(attacker, object *mc.Hero, mcc *mc.MonitorCenter) {
+	mcc.ListenAndFilter(attacker.Id, monitorfile.MonitorIdMap("攻击"))
+	mcc.ListenAndFilter(object.Id, monitorfile.MonitorIdMap("被攻击"))
+}
