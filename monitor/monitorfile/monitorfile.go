@@ -103,6 +103,8 @@ func BubbleIdMap(str string) uint {
 		return 5
 	case "固定攻击加成":
 		return 6
+	case "伤害减免":
+		return 7
 	default:
 		return 0
 	}
