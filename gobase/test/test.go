@@ -1,5 +1,7 @@
 package test
 
+import "fmt"
+
 func Test() {
 	////	m := sync.Mutex{}
 	//wg := sync.WaitGroup{}
@@ -28,4 +30,23 @@ func Test() {
 	//wg.Wait()
 	//fmt.Println(array)
 
+}
+
+func Mix() {
+	A()
+	B()
+}
+
+func A() {
+	fmt.Println("A")
+}
+func B() {
+
+	fmt.Println("B")
+	C()
+}
+func C() {
+
+	fmt.Println("C")
+	A()
 }

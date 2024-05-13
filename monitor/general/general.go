@@ -52,15 +52,9 @@ func SilentMonitor(hero *mc.Hero) *mc.Monitor {
 
 // 生成一个默认英雄的monitor 含带最基础的死亡以及放逐monitor
 func GeneralHeroMonitor(hero *mc.Hero, mcc *mc.MonitorCenter) (m1, m2 *mc.Monitor) {
-	mcc.HeroMap[hero.Id] = hero
 	dead := DeadMonitor(hero)
 	exile := ExileMonitor(hero)
 	//brother relationship
 	mcc.AddMonitorList([]*mc.Monitor{dead, exile})
 	return dead, exile
-}
-
-func Attack(attacker, object *mc.Hero, mcc *mc.MonitorCenter) {
-	mcc.ListenAndFilter(attacker.Id, monitorfile.MonitorIdMap("攻击"))
-	mcc.ListenAndFilter(object.Id, monitorfile.MonitorIdMap("被攻击"))
 }

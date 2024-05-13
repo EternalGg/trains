@@ -4,43 +4,86 @@ import (
 	"fmt"
 	"testing"
 	monitorcenter "train/monitor"
-	"train/monitor/general"
+	"train/monitor/attack"
+	"train/monitor/damage/takedamage"
 	"train/monitor/monitorfile"
+	"train/monitor/routines"
 )
 
 func TestCrazyMonitor(t *testing.T) {
-	crazyHero := monitorcenter.Hero{
-		Owner:       0,
-		Id:          1,
-		Health:      2,
-		Name:        "狂战士",
-		AttackPoint: 0,
-	}
-
-	hero1 := monitorcenter.Hero{
-		Owner:       1,
-		Id:          2,
-		Health:      2,
-		Name:        "木桩1",
-		AttackPoint: 0,
-	}
-
-	hero2 := monitorcenter.Hero{
-		Owner:       0,
-		Id:          3,
-		Health:      2,
-		Name:        "木桩2",
-		AttackPoint: 0,
-	}
 	mc := monitorcenter.MonitorCenterInit(0)
 
-	general.GeneralHeroMonitor(&hero1, mc)
-	general.GeneralHeroMonitor(&hero2, mc)
-	CrazyMonitorInit(&crazyHero, mc)
+	CrazyMonitorInit(mc)
+	CrazyMonitorInit(mc)
+	hero0 := mc.HeroMap[0]
+	hero1 := mc.HeroMap[1]
+	hero0.Name = "狂战士1"
+	hero1.Name = "狂战士2"
+	attack := attack.Attack{
+		Name:     "攻击test",
+		Attacker: hero0,
+		Targets:  hero1,
+		Damage:   0,
+		Mc:       mc,
+	}
+	routines.Gates(attack, mc)
+	PrintMonitorLogs(mc.MonitorLogs[len(mc.MonitorLogs)-1])
+	hero0.Intro()
+	hero1.Intro()
+	routines.Gates(attack, mc)
 
-	fmt.Println(mc.ListenAndFilter(2, monitorfile.MonitorIdMap("掉血")))
-	fmt.Println(mc.ListenAndFilter(3, monitorfile.MonitorIdMap("掉血")))
-	fmt.Println(mc.ListenAndFilter(1, monitorfile.MonitorIdMap("掉血")))
+	routines.Gates(attack, mc)
 
-	fmt.Println(crazyHero)
+	routines.Gates(attack, mc)
+	routines.Gates(attack, mc)
+	routines.Gates(attack, mc)
+
+	//fmt.Println(mc.MonitorLogs)
+}
+
+func PrintMonitorLogs(logs monitorcenter.Logs) {
+	switch logs.MainEvent.(type) {
+	case string:
+		fmt.Println(logs)
+	case monitorcenter.AttackCalculate:
+		// 断言
+		ac := logs.MainEvent.(monitorcenter.AttackCalculate)
+		if len(ac.ErrorSession) != 0 {
+			for _, u := range ac.ErrorSession {
+				fmt.Println(monitorfile.ErrorSessionToStr(u), ",取消攻击！")
+			}
+		}
+	}
+	for _, m := range logs.SubEvent {
+
+		switch m.(type) {
+		case string:
+			fmt.Println(m)
+		case monitorcenter.AttackCalculate:
+			// 断言
+			ac := m.(monitorcenter.AttackCalculate)
+			if len(ac.ErrorSession) != 0 {
+				for _, u := range ac.ErrorSession {
+					fmt.Println(monitorfile.ErrorSessionToStr(u), ",取消攻击！")
+				}
+			}
+			fmt.Println("造成攻击力为", ac.FinalDamage, "点的伤害！")
+		case monitorcenter.BeAttackCalculate:
+			ac := m.(monitorcenter.BeAttackCalculate)
+			if len(ac.ErrorSession) != 0 {
+				for _, u := range ac.ErrorSession {
+					fmt.Println(monitorfile.ErrorSessionToStr(u), ",取消攻击！")
+				}
+			}
+
+			fmt.Println("被攻击，", ac.FinalDamage, "点伤害！")
+		case takedamage.TakeDamage:
+			ac := m.(takedamage.TakeDamage)
+
+			fmt.Println("掉了，", ac.Damage, "点生命值！")
+			fmt.Println("----------------")
+		}
+
+	}
+
 }

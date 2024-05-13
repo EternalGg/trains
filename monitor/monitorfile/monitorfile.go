@@ -17,8 +17,10 @@ func MonitorIdMap(str string) uint {
 		return 5
 	case "被攻击":
 		return 6
-	case "攻击后":
+	case "被攻击后":
 		return 7
+	case "攻击后":
+		return 18
 
 	case "掉血":
 		return 8
@@ -40,6 +42,9 @@ func MonitorIdMap(str string) uint {
 		return 16
 	case "释放buff":
 		return 17
+
+	case "造成伤害":
+		return 19
 	default:
 		return 0
 	}
@@ -62,8 +67,9 @@ func MonitorStrMap(str uint) string {
 	case 6:
 		return "被攻击"
 	case 7:
+		return "被攻击后"
+	case 18:
 		return "攻击后"
-
 	case 8:
 		return "掉血"
 	case 9:
@@ -84,6 +90,9 @@ func MonitorStrMap(str uint) string {
 		return "被buff"
 	case 17:
 		return "释放buff"
+
+	case 19:
+		return "造成伤害"
 	default:
 		return ""
 	}
@@ -105,6 +114,14 @@ func BubbleIdMap(str string) uint {
 		return 6
 	case "伤害减免":
 		return 7
+	case "伤害减免百分比":
+		return 8
+	case "反弹":
+		return 9
+	case "伤害加深百分比":
+		return 10
+	case "伤害加深":
+		return 11
 	default:
 		return 0
 	}
@@ -121,5 +138,26 @@ func OwnerMap(str string) uint {
 		return 3
 	default:
 		return 4
+	}
+}
+
+func ErrorSession(str string) uint {
+	switch str {
+	case "目标死亡":
+		return 1
+	case "攻击者死亡":
+		return 2
+	default:
+		return 0
+	}
+}
+func ErrorSessionToStr(uints uint) string {
+	switch uints {
+	case 1:
+		return "目标死亡"
+	case 2:
+		return "攻击者死亡"
+	default:
+		return ""
 	}
 }

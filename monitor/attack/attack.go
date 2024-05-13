@@ -2,94 +2,74 @@ package attack
 
 import (
 	mc "train/monitor"
+	"train/monitor/attack/normalattack"
+	"train/monitor/attack/solidattack"
 	"train/monitor/monitorfile"
 )
 
 // Attack 总攻击类
-type (
-	Attack struct {
-		Name     string
-		Attacker *mc.Hero //攻击者
-		Targets  *mc.Hero //攻击目标
-		Damage   int      //固定技能
-		Mc       mc.MonitorCenter
-	}
-)
-
-// 攻击行为
-//  1. 计算返回
-//     pre attack
-//     攻击后可能的状态
-//     before attack
-//     这三个攻击session
-//  2. 如果确认攻击 则计算attack
-//     返回攻击结算session
-//  3. 攻击，攻击后的monitor
-func (a *Attack) Calculate() mc.PreAttackCalculate {
-	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id,
-		monitorfile.MonitorIdMap("攻击前"))
-	a.Mc.Publish(attackerBefore)
-	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
-		monitorfile.MonitorIdMap("攻击前"))
-	// publish 后
-	attackData := mc.PreAttackCalculate{
-		BaseDamage:         int(a.Attacker.AttackPoint),
-		DamageAddition:     0,
-		CriticalHitRate:    0,
-		CriticalStrikeRate: 0,
-		OtherDamage:        0,
-	}
-	for _, monitor := range attacker {
-		for key, value := range monitor.Bubble {
-			switch key {
-			case monitorfile.BubbleIdMap("暴击率"):
-				attackData.CriticalHitRate += value
-			case monitorfile.BubbleIdMap("暴击倍率"):
-				attackData.CriticalStrikeRate += value
-			case monitorfile.BubbleIdMap("攻击加成"):
-				attackData.DamageAddition += value
-			case monitorfile.BubbleIdMap("固定攻击加成"):
-				attackData.OtherDamage += value
-			}
-		}
-	}
-	// 如果暴击率为0或者没有没有暴击
-	// 加成完毕 ，计算伤害
-	//2 是暴击-暴击后 （伤害+伤害加成）*暴击倍率 + 固定加成
-	//3 否暴击 （伤害+伤害加成）+ 固定加成
-	if attackData.CriticalHitRate <= 0 || !mc.RandomByTime(attackData.CriticalHitRate) {
-		attackData.IsCritical = false
-		attackData.FinalDamage = attackData.BaseDamage + attackData.OtherDamage + attackData.DamageAddition
-	} else {
-		attackData.IsCritical = true
-		attackData.FinalDamage = (attackData.BaseDamage + attackData.DamageAddition) +
-			((attackData.BaseDamage+attackData.DamageAddition)*attackData.CriticalStrikeRate)/100 +
-			attackData.OtherDamage
-	}
-	return attackData
+type Attack struct {
+	Name     string
+	Attacker *mc.Hero //攻击者
+	Targets  *mc.Hero //攻击目标
+	Damage   int
+	Mc       *mc.MonitorCenter
 }
-func (a *Attack) Session() (result mc.SessionsAttack) {
-	result.Name = a.Name
-	result.PreAttackMonitor.Changes = []mc.MonitorSummary{}
-	result.BeforeAttackMonitor.Changes = []mc.MonitorSummary{}
-	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id, monitorfile.MonitorIdMap("攻击前"))
-	for _, monitor := range attackerBefore {
-		c := mc.MonitorSummary{
-			Name:    monitor.MID,
-			Summary: monitor.Bubble,
-		}
-		result.PreAttackMonitor.Changes = append(result.PreAttackMonitor.Changes, c)
+
+func (a *Attack) Checker() (result []uint) {
+	if a.Attacker.Health <= 0 {
+		result = append(result, monitorfile.ErrorSession("攻击者死亡"))
 	}
-	enemyBeAttack := a.Mc.ListenAndFilter(
-		a.Targets.Id, monitorfile.MonitorIdMap("被攻击"))
-	for _, monitor := range enemyBeAttack {
-		c := mc.MonitorSummary{
-			Name:    monitor.MID,
-			Summary: monitor.Bubble,
-		}
-		result.BeforeAttackMonitor.Changes = append(result.BeforeAttackMonitor.Changes, c)
+	if a.Targets.Health <= 0 {
+		result = append(result, monitorfile.ErrorSession("目标死亡"))
 	}
 	return
+}
+func (a *Attack) Calculator() (result mc.AttackCalculate) {
+	if a.Damage == 0 {
+		sa := normalattack.SingleAttack{
+			Attacker: a.Attacker,
+			Targets:  a.Targets,
+			Mc:       a.Mc,
+		}
+		result = sa.Calculator()
+	} else {
+		sa := solidattack.SolidAttack{
+			Name:     a.Name,
+			Attacker: a.Attacker,
+			Targets:  a.Targets,
+			Damage:   a.Damage,
+			Mc:       a.Mc,
+		}
+		result = sa.Calculator()
+
+	}
+	result.AttackerName = a.Attacker.Name
+	result.TargetName = a.Targets.Name
+	return
+}
+
+func (a *Attack) Processer() (ad mc.AttackCalculate) {
+	// checker time
+	if len(a.Checker()) >= 1 {
+		return
+	}
+	// calculate time
+	ad = a.Calculator()
+	ad.Name = a.Name
+	// processer time
+	return
+}
+
+func (a *Attack) Later(ba mc.BeAttackCalculate, td mc.TakeDamage) {
+	//if td.HitBack != 0 {
+	//	hb := Attack{
+	//		Name:     "反弹伤害",
+	//		Attacker: a.Targets,
+	//		Targets:  a.Attacker,
+	//		Damage:   td.HitBack,
+	//		Mc:       a.Mc,
+	//	}
+	//	hb.Processer()
+	//}
 }

@@ -6,15 +6,17 @@ import (
 	"train/monitor/monitorfile"
 )
 
-func CrazyHeroInit() mc.Hero {
+func CrazyHeroInit() *mc.Hero {
 	crazy := mc.Hero{
+		Owner:       0,
 		Id:          1,
-		Health:      2,
-		Name:        "狂暴战士",
-		AttackPoint: 0,
+		Health:      5,
+		Name:        "狂战士",
+		AttackPoint: 1,
+		GameTempo:   nil,
+		RoundTempo:  nil,
 	}
-
-	return crazy
+	return &crazy
 }
 
 func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
@@ -30,7 +32,10 @@ func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
 		},
 		ListenerList: nil,
 		Froze:        false,
+		Bubble:       map[uint]int{},
 	}
+	// 反弹bubble
+	//selfMonitor.Bubble[monitorfile.BubbleIdMap("反弹")] = 1
 	result = append(result, &selfMonitor)
 	teamMonitor := mc.Monitor{
 		MID: monitorfile.MonitorIdMap("狂战士之血"),
@@ -59,9 +64,10 @@ func CrazyMonitorLicense(hero *mc.Hero) []*mc.Monitor {
 	return result
 }
 
-func CrazyMonitorInit(hero *mc.Hero, mcc *mc.MonitorCenter) {
-	mcc.AddHeroInHeroMap(hero)
-	cl := CrazyMonitorLicense(hero)
+func CrazyMonitorInit(mcc *mc.MonitorCenter) {
+	cr := CrazyHeroInit()
+	mcc.AddHeroInHeroMap(cr)
+	cl := CrazyMonitorLicense(cr)
 	mcc.AddMonitorList(cl)
-	general.GeneralHeroMonitor(hero, mcc)
+	general.GeneralHeroMonitor(cr, mcc)
 }
