@@ -2,10 +2,11 @@ package routines
 
 import (
 	monitorcenter "train/monitor"
-	"train/monitor/attack"
-	"train/monitor/beattack"
-	"train/monitor/damage/takedamage"
-	"train/monitor/dead"
+	"train/monitor/hero/attribute"
+	"train/monitor/hero/dead"
+	"train/monitor/routines/attack"
+	"train/monitor/routines/beattack"
+	"train/monitor/routines/damage/takedamage"
 )
 
 func Routines(types interface{}, log *monitorcenter.Logs) {
@@ -30,7 +31,6 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 		}
 		Routines(ba, log)
 	case beattack.BeAttack:
-
 		beAttackData := types.(beattack.BeAttack)
 		//fmt.Println(beAttackData.Damage)
 		// processer time
@@ -88,7 +88,12 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 		}
 		Routines(death, log)
 	case dead.Death:
-
+		//buffs := types.(buff.Buff)
+		//buffs.Processer()
+		log.SubEvent = append(log.SubEvent)
+	case attribute.Attribute:
+		attr := types.(attribute.Attribute)
+		attr.Positive()
 	}
 }
 

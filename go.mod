@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
 	github.com/gocolly/colly v1.2.0
+	github.com/gorilla/websocket v1.5.0
 )
 
 require (
