@@ -30,6 +30,6 @@ func HippoMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func HippoMonitorInit(mcc *mc.MonitorCenter) {
 	cr := HippoHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := HippoMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := HippoMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

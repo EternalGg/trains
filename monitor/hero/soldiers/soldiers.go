@@ -30,6 +30,6 @@ func SoldiersMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func SoldiersMonitorInit(mcc *mc.MonitorCenter) {
 	cr := SoldiersHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := SoldiersMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := SoldiersMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

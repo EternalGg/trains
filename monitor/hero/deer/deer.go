@@ -30,6 +30,6 @@ func DeerMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func DeerMonitorInit(mcc *mc.MonitorCenter) {
 	cr := DeerHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := DeerMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := DeerMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

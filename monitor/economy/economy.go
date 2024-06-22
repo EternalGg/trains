@@ -53,7 +53,12 @@ func (e *Economy) ChoseBefore(hero map[int]*hero.Hero) {
 // 商品的购买
 // errorcode 1:金钱不足
 // errorcode 2:购买cd
+// errorcode 3:不存在该hid
 func (e *Economy) BuyHero(hid int) int {
+	// 3
+	if e.BaseShop.Cards[hid] == nil {
+		return 3
+	}
 	// 1.查看剩余金钱是否大于售价
 	if e.BaseShop.Cards[hid].Hero.Price > e.Money {
 		return 1

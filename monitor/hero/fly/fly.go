@@ -30,6 +30,6 @@ func FlyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func FlyMonitorInit(mcc *mc.MonitorCenter) {
 	cr := FlyHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := FlyMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := FlyMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

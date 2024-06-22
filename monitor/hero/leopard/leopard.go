@@ -35,7 +35,7 @@ func Skill2leopard(hero *hero.Hero) (result *monitors.Monitor) {
 	return night
 }
 
-func leopardMonitorInit(mcc *mc.MonitorCenter) {
+func LeopardMonitorInit(mcc *mc.MonitorCenter) {
 	leopard := LeopardHeroInit()
 	mcc.AddHeroInHeroMap(leopard)
 	//skill1

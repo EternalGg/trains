@@ -1,6 +1,7 @@
 package heros
 
 import (
+	monitorcenter "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/hero/crazy"
 	"train/monitor/hero/crocodile"
@@ -79,5 +80,56 @@ func ChoseHeroById(id int) *hero.Hero {
 		return deer.DeerHeroInit()
 	default:
 		return nil
+	}
+}
+
+func LandingById(id int, mc *monitorcenter.MonitorCenter) {
+	switch id {
+	case 1:
+		crazy.CrazyMonitorInit(mc)
+		return
+	case 2:
+		ele.EleMonitorInit(mc)
+		return
+	case 3:
+		hippo.HippoMonitorInit(mc)
+		return
+	case 4:
+		rhino.RhinoMonitorInit(mc)
+		return
+	case 5:
+		leopard.LeopardMonitorInit(mc)
+		return
+	case 6:
+		crocodile.CrocodileMonitorInit(mc)
+		return
+	case 7:
+		soldiers.SoldiersMonitorInit(mc)
+		return
+	case 8:
+		zebra.ZebraMonitorInit(mc)
+		return
+	case 9:
+		jugg.JuggMonitorInit(mc)
+		return
+	case 10:
+		NatureGolem.NatureGolemMonitorInit(mc)
+		return
+	case 11:
+		flamegolem.FlameGolemMonitorInit(mc)
+		return
+	case 12:
+		octopus.OctopusMonitorInit(mc)
+		return
+	case 13:
+		lion.LionMonitorInit(mc)
+		return
+	case 14:
+		fly.FlyMonitorInit(mc)
+		return
+	case 15:
+		deer.DeerMonitorInit(mc)
+	default:
+		return
 	}
 }

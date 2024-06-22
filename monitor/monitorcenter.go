@@ -243,7 +243,6 @@ func (mc *MonitorCenter) AddHeroInHeroMap(hero *hero.Hero) {
 	//增加hero到mcHeroMap
 	hero.Tid = len(mc.HeroMap)
 	mc.HeroMap[hero.Tid] = hero
-	fmt.Println("add", hero.Tid)
 }
 func (mc *MonitorCenter) ListenAndFilter(heroId, listenType int) (result []*monitors.Monitor) {
 	for _, monitor := range mc.MonitorMap {
@@ -303,6 +302,9 @@ func (mc *MonitorCenter) MonitorsPublish(ms []*monitors.Monitor) {
 	}
 }
 func (mc *MonitorCenter) MonitorsActive(ms []*monitors.Monitor) {
+	if len(ms) == 0 {
+		return
+	}
 	for _, m := range ms {
 		mc.AddMonitor(m)
 	}
@@ -364,6 +366,9 @@ func (mc *MonitorCenter) BattleFiledListen() {
 
 }
 func (mc *MonitorCenter) BattleFiledSign() {
+
+}
+func (mc *MonitorCenter) HeroLanding(hid int, bfid int) {
 
 }
 

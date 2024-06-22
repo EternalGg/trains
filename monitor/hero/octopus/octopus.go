@@ -30,6 +30,6 @@ func OctopusMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func OctopusMonitorInit(mcc *mc.MonitorCenter) {
 	cr := OctopusHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := OctopusMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := OctopusMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

@@ -30,6 +30,6 @@ func JuggMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func JuggMonitorInit(mcc *mc.MonitorCenter) {
 	cr := JuggHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := JuggMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := JuggMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 	mc "train/monitor"
+	"train/monitor/economy/shop"
 	"train/monitor/hero"
 	"train/monitor/hero/heros"
 )
@@ -21,7 +22,7 @@ type (
 		Gamer         *Gamer
 		Ch            chan *ClientSession
 		ChOut         chan *ServerSession
-		GameState     int //游戏状态 1选择卡牌 2早上 3早上routine 4结束 5中午 6下午routine 7晚上 8夜晚routine
+		GameState     int //游戏状态 0结束  1选择卡牌 2早上 3早上routine 4中午 5下午routine 6晚上 7夜晚routine
 		T             int // 时间
 
 	}
@@ -32,7 +33,7 @@ type (
 	ServerSession struct {
 		Token []byte // token验证
 		Type  int    // 0未登陆 1登陆player信息 2大厅等待信息 3卡牌选择信息 4游戏内时间与State
-		// 5 end 6 input channel
+		// 5 购买商店信息 6 出售物品信息
 		Data []byte // when Type=1
 	}
 	ClientSession struct {
@@ -55,6 +56,32 @@ type (
 		RemainMoney  int                //剩余金钱
 		CardPool     map[int]*hero.Hero //可选择卡牌池
 		ChoseCards   map[int]*hero.Hero //已选择卡牌池
+	}
+	Landing struct {
+		CardId   int //卡牌数据
+		Position int //部署位置
+	}
+	Shop struct {
+		IsSale bool //是否售卖
+		CardId int  //卡牌id
+	}
+	SaleData struct {
+		HeroName  string //英雄名称
+		SaleMoney int    //销售价格
+		ErrorCode int    //错误代码
+		// errorcode 1:手牌中不存在该卡牌
+	}
+	BuyData struct {
+		HeroName  string // 英雄名称
+		BuyMoney  int    //购买价格
+		ErrorCode int    //错误代码
+		// errorcode 1:金钱不足
+		// errorcode 2:购买cd
+		// errorcode 3:商店不存在该hid
+	}
+	PKG struct {
+		CardsPkg map[int]*shop.Cards // 卡牌
+		Money    int                 // 金钱
 	}
 )
 
@@ -136,7 +163,6 @@ func (r *TestingGame) GameStart() {
 			json.Unmarshal(CardChose.Data, &gs)
 			ParseInt, _ := strconv.ParseInt(string(gs.GameData), 10, 32)
 			id := int(ParseInt)
-			fmt.Println("当前卡牌"+strconv.Itoa(id), len(cc.ChoseCards), string(CardChose.Data), gs.GameData, gs)
 			// 如果为选择卡牌
 
 			// 如果卡牌选择为空（未选择）
@@ -160,23 +186,111 @@ func (r *TestingGame) GameStart() {
 
 	}
 	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.ChoseCards)
+	r.MonitorCenter.Economy[r.Gamer.ID].Money = cc.RemainMoney
 	//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].ShowHero())
 	// card chose 选择结束 进入routine
 	r.GameState = 2
 	//fmt.Println("game state" + strconv.Itoa(r.GameState))
 	// 自由模式 游戏结束根据 游戏外quit
-	for r.GameState != 4 {
+	for r.GameState != 0 {
 		switch r.GameState {
 		case 2:
 			//早上 同时接收部署和购买 当结束进入routine
 			select {
 			case LandingOrBuying := <-r.Ch:
-				// buying 1查询商店 2购买 b+id 3 出售 s+id
-				// landing 1查询地图 2部署 l+id+位置
-				// ending 结束回合
-				fmt.Println(LandingOrBuying)
+				// buy  buy+id
+				// shop 查询商店
+				// sale sale+id
+				// land land+id+位置
+				// map 查询地图
+				// end 结束回合
+				// pkg 查询金钱和卡包
+				gs := GameSession{}
+				json.Unmarshal(LandingOrBuying.Data, &gs)
+				switch gs.GameDatatype {
+				case 2:
+					if string(gs.GameData) == "shop" {
+						s, gs := ServerSession{}, GameSession{}
+						s.Type = 3
+						gs.GameDatatype = 2
+						bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
+						jbs, _ := json.Marshal(bs)
+						gs.GameData = jbs
+						jgs, _ := json.Marshal(gs)
+						s.Data = jgs
+						r.ChOut <- &s
+					} else {
+						shop := Shop{}
+						json.Unmarshal(gs.GameData, &shop)
+						if shop.IsSale {
+							r.MonitorCenter.Economy[r.Gamer.ID].SaleHero(shop.CardId)
+						} else {
+							r.MonitorCenter.Economy[r.Gamer.ID].BuyHero(shop.CardId)
+						}
+						s, gs := ServerSession{}, GameSession{}
+						s.Type = 3
+						gs.GameDatatype = 5
+						pkg := PKG{
+							r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
+							r.MonitorCenter.Economy[r.Gamer.ID].Money,
+						}
+						jpkg, _ := json.Marshal(pkg)
+						gs.GameData = jpkg
+						jgs, _ := json.Marshal(gs)
+						s.Data = jgs
+						r.ChOut <- &s
+					}
+				case 3:
+					// 地图以及登陆
+					if string(gs.GameData) != ("map") {
+						land := Landing{}
+						json.Unmarshal(gs.GameData, &land)
+						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
+							// 如果没有这个bf
+							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
+								r.MonitorCenter.BattleFiled.Positions[land.Position].Hero = &r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero
+								r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] = nil
+								heros.LandingById(r.MonitorCenter.BattleFiled.Positions[land.Position].Hero.Id, r.MonitorCenter)
+							}
+						}
+						for _, monitor := range r.MonitorCenter.MonitorMap {
+							fmt.Println(monitor)
+						}
+					}
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 3
+					m := r.MonitorCenter.BattleFiled
+					jm, _ := json.Marshal(m)
+					gs.GameData = jm
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 4:
+					//结束该回合
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 5
+					r.GameState = NextGameState(r.GameState)
+				case 5:
+					// 查询卡牌和经济
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 5
+					pkg := PKG{
+						r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
+						r.MonitorCenter.Economy[r.Gamer.ID].Money,
+					}
+					jpkg, _ := json.Marshal(pkg)
+					gs.GameData = jpkg
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				}
 			}
 		case 3:
+
+		case 4:
 		case 5:
 		case 6:
 
@@ -187,4 +301,13 @@ func (r *TestingGame) GameStart() {
 	//r.MonitorCenter.
 	// 2.游戏循环到十回合
 
+}
+
+func NextGameState(i int) int {
+	if i != 7 {
+		i++
+	} else {
+		i = 2
+	}
+	return i
 }

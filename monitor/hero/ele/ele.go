@@ -23,13 +23,13 @@ func EleHeroInit() *hero.Hero {
 	return &Ele
 }
 
-func EleMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
-	return
-}
+//func EleMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
+//	return
+//}
 
 func EleMonitorInit(mcc *mc.MonitorCenter) {
 	cr := EleHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := EleMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := EleMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

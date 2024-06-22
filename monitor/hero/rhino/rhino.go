@@ -23,13 +23,13 @@ func RhinoHeroInit() *hero.Hero {
 	return &Rhino
 }
 
-func RhinoMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
-	return
-}
+//func RhinoMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
+//	return
+//}
 
 func RhinoMonitorInit(mcc *mc.MonitorCenter) {
 	cr := RhinoHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := RhinoMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := RhinoMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }

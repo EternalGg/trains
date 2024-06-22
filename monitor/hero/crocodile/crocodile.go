@@ -30,6 +30,6 @@ func CrocodileMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 func CrocodileMonitorInit(mcc *mc.MonitorCenter) {
 	cr := CrocodileHeroInit()
 	mcc.AddHeroInHeroMap(cr)
-	cl := CrocodileMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{cl})
+	//cl := CrocodileMonitorLicense(cr)
+	mcc.MonitorsActive([]*monitors.Monitor{})
 }
