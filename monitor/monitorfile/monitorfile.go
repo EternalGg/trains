@@ -315,7 +315,7 @@ func HeroNameToStr(id int) string {
 	case 15:
 		return "鹿"
 	default:
-		return "空"
+		return ""
 	}
 }
 
@@ -331,6 +331,18 @@ func SkillsMap(str string) int {
 		return 3
 	default:
 		return 0
+	}
+}
+func SkillsIntToStrMap(i int) string {
+	switch i {
+	case 1:
+		return "攻击"
+	case 2:
+		return "移动"
+	case 3:
+		return "防守"
+	default:
+		return ""
 	}
 }
 

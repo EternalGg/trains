@@ -28,8 +28,9 @@ func DeerMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func DeerMonitorInit(mcc *mc.MonitorCenter) {
-	cr := DeerHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	deer := DeerHeroInit()
+	mcc.AddHeroInHeroMap(deer)
 	//cl := DeerMonitorLicense(cr)
+	deer.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

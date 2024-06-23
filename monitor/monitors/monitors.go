@@ -16,6 +16,7 @@ type (
 		IsForever     bool // 是否是永久
 		LifeTimeState int  // 持续时间扣减方式 0次数 1游戏时间 2单位回合
 		LifeTime      int  // 持续时间
+		RelianceOwner bool //是否依赖于owner是否死亡
 
 		// publishstate monitor，buff后续加成 foreverstate 直接buff加成 bubble 非加成到单位属性类加成
 		PublishState  map[int]int        // 激活加成（被动加成)

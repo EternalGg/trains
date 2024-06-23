@@ -28,8 +28,9 @@ func EleHeroInit() *hero.Hero {
 //}
 
 func EleMonitorInit(mcc *mc.MonitorCenter) {
-	cr := EleHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	ele := EleHeroInit()
+	mcc.AddHeroInHeroMap(ele)
 	//cl := EleMonitorLicense(cr)
+	ele.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

@@ -28,8 +28,9 @@ func JuggMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func JuggMonitorInit(mcc *mc.MonitorCenter) {
-	cr := JuggHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	jugg := JuggHeroInit()
+	mcc.AddHeroInHeroMap(jugg)
 	//cl := JuggMonitorLicense(cr)
+	jugg.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

@@ -28,8 +28,9 @@ func NatureGolemMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func NatureGolemMonitorInit(mcc *mc.MonitorCenter) {
-	cr := NatureGolemHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	nature := NatureGolemHeroInit()
+	mcc.AddHeroInHeroMap(nature)
 	//cl := NatureGolemMonitorLicense(cr)
+	nature.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

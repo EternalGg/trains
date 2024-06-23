@@ -31,5 +31,6 @@ func CrocodileMonitorInit(mcc *mc.MonitorCenter) {
 	cr := CrocodileHeroInit()
 	mcc.AddHeroInHeroMap(cr)
 	//cl := CrocodileMonitorLicense(cr)
+	cr.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

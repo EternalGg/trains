@@ -28,8 +28,9 @@ func RhinoHeroInit() *hero.Hero {
 //}
 
 func RhinoMonitorInit(mcc *mc.MonitorCenter) {
-	cr := RhinoHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	rhino := RhinoHeroInit()
+	mcc.AddHeroInHeroMap(rhino)
 	//cl := RhinoMonitorLicense(cr)
+	rhino.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

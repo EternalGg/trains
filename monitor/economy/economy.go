@@ -8,13 +8,29 @@ import (
 	"train/monitor/monitorfile"
 )
 
-type Economy struct {
-	Money    int                 // 剩余金钱
-	Bank     *bank.Bank          // 银行系统
-	BaseShop *shop.BaseShop      // 基地商店
-	Shop     *shop.Shop          // 商人
-	CardsPkg map[int]*shop.Cards // 卡牌
-}
+type (
+	Economy struct {
+		Money    int                 // 剩余金钱
+		Bank     *bank.Bank          // 银行系统
+		BaseShop *shop.BaseShop      // 基地商店
+		Shop     *shop.Shop          // 商人
+		CardsPkg map[int]*shop.Cards // 卡牌
+	}
+	SaleData struct {
+		HeroName  string //英雄名称
+		SaleMoney int    //销售价格
+		ErrorCode int    //错误代码
+		// errorcode 1:手牌中不存在该卡牌
+	}
+	BuyData struct {
+		HeroName  string // 英雄名称
+		BuyMoney  int    //购买价格
+		ErrorCode int    //错误代码
+		// errorcode 1:金钱不足
+		// errorcode 2:购买cd
+		// errorcode 3:商店不存在该hid
+	}
+)
 
 func EconomyInit() *Economy {
 	Shop, baseShop := shop.ShopInit()
@@ -54,18 +70,22 @@ func (e *Economy) ChoseBefore(hero map[int]*hero.Hero) {
 // errorcode 1:金钱不足
 // errorcode 2:购买cd
 // errorcode 3:不存在该hid
-func (e *Economy) BuyHero(hid int) int {
+func (e *Economy) BuyHero(hid int) BuyData {
+	buy := BuyData{}
 	// 3
 	if e.BaseShop.Cards[hid] == nil {
-		return 3
+		buy.ErrorCode = 3
+		return buy
 	}
 	// 1.查看剩余金钱是否大于售价
 	if e.BaseShop.Cards[hid].Hero.Price > e.Money {
-		return 1
+		buy.ErrorCode = 1
+		return buy
 	}
 	// 2.查看购买cd
 	if e.BaseShop.Cards[hid].BuyCd > 0 {
-		return 2
+		buy.ErrorCode = 2
+		return buy
 	}
 	// 3.购买
 	// 扣除钱
@@ -74,15 +94,27 @@ func (e *Economy) BuyHero(hid int) int {
 	e.BaseShop.Cards[hid].BuyCd += e.BaseShop.Cards[hid].CD
 	// 卡牌进组
 	e.AddCardFromPKG(e.BaseShop.Cards[hid])
-	return 0
+	buy.BuyMoney = e.BaseShop.Cards[hid].Hero.Price
+	buy.HeroName = e.BaseShop.Cards[hid].Hero.Name
+	return buy
 }
 
 // 卖
-func (e *Economy) SaleHero(point int) {
+func (e *Economy) SaleHero(point int) SaleData {
+	// error code 1:没有此卡牌
+	sale := SaleData{}
+	if e.CardsPkg[point] == nil {
+		sale.ErrorCode = 1
+		return sale
+	}
 	// 钱到账
-	e.Money += (e.CardsPkg[(point)].Hero.Price * 6) / 10
+	saleMoney := (e.CardsPkg[(point)].Hero.Price * 6) / 10
+	e.Money += saleMoney
+	sale.SaleMoney = saleMoney
+	sale.HeroName = e.CardsPkg[point].Hero.Name
 	// 删除卡牌从卡组
 	e.DeleteCardFromPKG((point))
+	return sale
 }
 
 // banks

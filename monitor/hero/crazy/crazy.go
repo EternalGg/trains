@@ -38,6 +38,7 @@ func CrazyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 		LifeTime:      0,
 		PublishState:  map[int]int{},
 		ListenLicense: []monitors.MonitorLicense{},
+		RelianceOwner: true,
 	}
 	// forever state
 	result.PublishState[monitorfile.BubbleIdMap("攻击力永久加成")] = 1
@@ -62,5 +63,6 @@ func CrazyMonitorInit(mcc *mc.MonitorCenter) {
 	cr := CrazyHeroInit()
 	mcc.AddHeroInHeroMap(cr)
 	cl := CrazyMonitorLicense(cr)
+	cr.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{cl})
 }

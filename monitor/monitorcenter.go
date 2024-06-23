@@ -18,7 +18,7 @@ type (
 		GID          int                       //游戏房间Id
 		HeroMap      map[int]*hero.Hero        //根据hero id 查找英雄
 		MonitorMap   map[int]*monitors.Monitor //根据monitor id索引monitor
-		MonitorCount map[int]int               // monitor类别的记录
+		MonitorCount map[int]int               //monitor类别的记录
 		MonitorLogs  []Logs                    //记录monitor 所有发生的事情
 		BattleFiled  *battlefiled.BattleFiled
 		Time         MonitorTime
@@ -40,6 +40,7 @@ type (
 		DayChange      map[*monitors.Monitor]uint //天数
 		NQuantumChange map[*monitors.Monitor]uint //早上0 下午1 晚上2
 		NightChange    map[*monitors.Monitor]bool //白天黑夜 白天True 黑夜False
+		Actions        []*Action                  //行动
 	}
 )
 
@@ -102,6 +103,12 @@ type (
 		TimeQuantum uint               // 时间 早上，下午，晚上 0,1,2
 		HeroTime    map[*hero.Hero]int // map[hero]speed 根据heroid映射速度
 		IsNight     bool               // 是夜晚吗
+	}
+	// rountine中的Action们 包含英雄，单位，建筑的行动 定时的被动技能
+	Action struct {
+		HeroAction bool // 是否是英雄行动
+		HID        int  // 应该行动的hero id
+		MID        int  // monitor id
 	}
 )
 
@@ -227,7 +234,7 @@ func (mc *MonitorCenter) AddMonitor(monitor *monitors.Monitor) {
 func (mc *MonitorCenter) DeleteMonitor(m *monitors.Monitor) {
 	//删除相关所有monitor
 	for id, monitor := range mc.MonitorMap {
-		if monitor.Owner.Tid == m.Owner.Id {
+		if monitor.Owner.Tid == m.Owner.Id && monitor.RelianceOwner {
 			mc.MonitorMap[id] = nil
 			mc.MonitorCount[monitor.MID]--
 		}

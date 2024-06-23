@@ -60,5 +60,6 @@ func ZebraMonitorInit(mcc *mc.MonitorCenter) {
 	// 被动技能 skill2 移动速度光环 附近1距离友方单位移动速度+2 （Speed - 2）
 	skill1 := Skill1Zebra(zb)
 	skill2 := Skill2Zebra(zb)
+	zb.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{skill1, skill2})
 }

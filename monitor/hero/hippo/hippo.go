@@ -28,8 +28,9 @@ func HippoMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func HippoMonitorInit(mcc *mc.MonitorCenter) {
-	cr := HippoHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	hippo := HippoHeroInit()
+	mcc.AddHeroInHeroMap(hippo)
 	//cl := HippoMonitorLicense(cr)
+	hippo.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

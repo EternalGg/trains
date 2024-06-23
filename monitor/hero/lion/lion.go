@@ -29,8 +29,9 @@ func LionMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func LionMonitorInit(mcc *mc.MonitorCenter) {
-	cr := LionHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	lion := LionHeroInit()
+	mcc.AddHeroInHeroMap(lion)
 	//cl := LionMonitorLicense(cr)
+	lion.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

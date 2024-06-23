@@ -28,8 +28,9 @@ func SoldiersMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func SoldiersMonitorInit(mcc *mc.MonitorCenter) {
-	cr := SoldiersHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	soldiers := SoldiersHeroInit()
+	mcc.AddHeroInHeroMap(soldiers)
 	//cl := SoldiersMonitorLicense(cr)
+	soldiers.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

@@ -44,5 +44,6 @@ func LeopardMonitorInit(mcc *mc.MonitorCenter) {
 	//夜行buff
 	skill1 := Skill1leopard(leopard)
 	skill2 := Skill2leopard(leopard)
+	leopard.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{skill1, skill2})
 }

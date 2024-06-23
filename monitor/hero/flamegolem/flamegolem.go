@@ -28,8 +28,9 @@ func FlameGolemMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 }
 
 func FlameGolemMonitorInit(mcc *mc.MonitorCenter) {
-	cr := FlameGolemHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+	flame := FlameGolemHeroInit()
+	mcc.AddHeroInHeroMap(flame)
 	//cl := FlameGolemMonitorLicense(cr)
+	flame.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }
