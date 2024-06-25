@@ -2,9 +2,11 @@ package room
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"time"
 	mc "train/monitor"
+	"train/monitor/battlefiled"
 	"train/monitor/economy/shop"
 	"train/monitor/hero"
 	"train/monitor/hero/heros"
@@ -23,9 +25,8 @@ type (
 		Gamer         *Gamer
 		Ch            chan *ClientSession
 		ChOut         chan *ServerSession
-		GameState     string //游戏状态 0结束  1选择卡牌 2早上 3早上routine 4中午 5下午routine 6晚上 7夜晚routine
+		GameState     *State //游戏状态 0结束  1选择卡牌 2早上 3早上routine 4中午 5下午routine 6晚上 7夜晚routine
 		T             int    // 时间
-
 	}
 	Gamer struct {
 		ID          int
@@ -45,39 +46,53 @@ type (
 	}
 
 	State struct {
-		Time      int    //时间
-		GameState string //游戏时间状态
+		Time      int       //时间
+		GameState string    //游戏时间状态
+		DataState int       //数据类型 1 卡牌选择 2 英雄轮次
+		HT        HeroTurn  //hero turn data
+		CC        CardChose //chose card
 	}
 	GameSession struct {
 		GameDatatype int //1 选择卡牌
 		GameData     []byte
 	}
+	// s->c
 	CardChose struct {
-		SessionState int                //1卡牌阅览 2err已经被选择 3success选择卡牌成功
-		RemainMoney  int                //剩余金钱
-		CardPool     map[int]*hero.Hero //可选择卡牌池
-		ChoseCards   map[int]*hero.Hero //已选择卡牌池
+		RemainMoney int                //剩余金钱
+		CardPool    map[int]*hero.Hero //可选择卡牌池
+		ChoseCards  map[int]*hero.Hero //已选择卡牌池
 	}
+	CardChoseResult struct {
+		SessionState string // 1err已经被选择 2success选择卡牌成功
+	}
+	// c->s
 	Landing struct {
 		CardId   int //卡牌数据
 		Position int //部署位置
 	}
+	// c->s
 	Shop struct {
 		IsSale bool //是否售卖
 		CardId int  //卡牌id
 	}
-
+	// s->c
 	PKG struct {
 		CardsPkg map[int]*shop.Cards // 卡牌
 		Money    int                 // 金钱
 	}
+	Skill struct {
+		Skill      *skills2.Skill // skill
+		Selectable Selectable     // 技能可以选中的目标
+	}
+	Selectable struct {
+		Unit []*hero.Hero            // 可选择的单位
+		Pos  []*battlefiled.Position // 可选择的地图
+	}
+	// s->c
 	HeroTurn struct {
 		Skills      []*skills2.Skill
 		RemainMoney int
 		Hero        *hero.Hero
-	}
-	SkillTarget struct {
-		// 技能
 	}
 )
 
@@ -91,11 +106,12 @@ func TestingGameInit(userid int) *TestingGame {
 	r := TestingGame{
 		MonitorCenter: mc.MonitorCenterInit(userid),
 		Gamer:         GamerInit(),
+		GameState:     &State{},
 	}
 	r.Ch = make(chan *ClientSession, 10)
 	r.ChOut = make(chan *ServerSession, 10)
 	r.Gamer.ID = 1
-	r.GameState = "选择卡牌"
+	r.GameState.GameState = "选择卡牌"
 	r.T = 0
 	return &r
 }
@@ -114,17 +130,15 @@ func (r *TestingGame) GameStart() {
 	// 监视游戏胜利
 	// 返回正确的信息
 	// 计时以及
-	r.GameState = "选择卡牌"
+	r.GameState.GameState = "选择卡牌"
 	go func() {
 		for {
-			r.T++
 			time.Sleep(1000000000)
-			s, ss := ServerSession{}, State{}
+			r.T++
+			r.GameState.Time = r.T
+			s := ServerSession{}
 			s.Type = 4
-			ss.Time = r.T
-			ss.GameState = r.GameState
-
-			jss, _ := json.Marshal(ss)
+			jss, _ := json.Marshal(r.GameState)
 			s.Data = jss
 			r.ChOut <- &s
 		}
@@ -135,23 +149,10 @@ func (r *TestingGame) GameStart() {
 		ChoseCards:  map[int]*hero.Hero{},
 	}
 
-	//每十秒发送卡牌信息给客户端
-	go func() {
-		for r.GameState == "选择卡牌" {
-			time.Sleep(10000000000)
-			s, gs := ServerSession{}, GameSession{}
-			s.Type = 3
-			gs.GameDatatype = 1
-			cc.SessionState = 1
-			jc, _ := json.Marshal(cc)
-			gs.GameData = jc
-			jgs, _ := json.Marshal(gs)
-			s.Data = jgs
-			r.ChOut <- &s
-		}
-	}()
 	//card chose turn
-	for len(cc.ChoseCards) != 7 {
+	r.GameState.DataState = 1
+	r.GameState.CC = cc
+	for len(cc.ChoseCards) != 3 {
 		select {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
@@ -160,21 +161,22 @@ func (r *TestingGame) GameStart() {
 			ParseInt, _ := strconv.ParseInt(string(gs.GameData), 10, 32)
 			id := int(ParseInt)
 			// 如果为选择卡牌
-
+			result := CardChoseResult{}
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
 				cc.RemainMoney -= cc.CardPool[id].Price
 				cc.ChoseCards[id] = cc.CardPool[id]
 				delete(cc.CardPool, id)
-				cc.SessionState = 3
+				result.SessionState = "卡牌选择成功!"
+				r.GameState.CC = cc
 			} else {
-				cc.SessionState = 2
+				result.SessionState = "Error已经被选择!"
 			}
 			s, gs := ServerSession{}, GameSession{}
 			s.Type = 3
 			gs.GameDatatype = 1
-			jc, _ := json.Marshal(cc)
-			gs.GameData = jc
+			resultJson, _ := json.Marshal(result)
+			gs.GameData = resultJson
 			jgs, _ := json.Marshal(gs)
 			s.Data = jgs
 			r.ChOut <- &s
@@ -185,11 +187,12 @@ func (r *TestingGame) GameStart() {
 	r.MonitorCenter.Economy[r.Gamer.ID].Money = cc.RemainMoney
 	//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].ShowHero())
 	// card chose 选择结束 进入routine
-	r.GameState = "早上"
+	r.GameState.GameState = "早上"
+	r.GameState.DataState = 0
 	//fmt.Println("game state" + strconv.Itoa(r.GameState))
 	// 自由模式 游戏结束根据 游戏外quit
-	for r.GameState != "结束" {
-		switch r.GameState {
+	for r.GameState.GameState != "结束" {
+		switch r.GameState.GameState {
 		case "早上":
 			//早上 同时接收部署和购买 当结束进入routine
 			select {
@@ -242,20 +245,27 @@ func (r *TestingGame) GameStart() {
 					}
 				case 3:
 					// 地图以及登陆
+					land := Landing{}
+					json.Unmarshal(gs.GameData, &land)
+					//fmt.Println(land.Position, land.CardId)
 					if string(gs.GameData) != ("map") {
-						land := Landing{}
-						json.Unmarshal(gs.GameData, &land)
+						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
+						//	fmt.Println(i, i2)
+						//}
+						//fmt.Println(r.MonitorCenter.BattleFiled.Positions[land.Position] != nil, r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId], r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil, r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId], r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil)
 						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
 							// 如果没有这个bf
 							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
 								// position
 								r.MonitorCenter.BattleFiled.Positions[land.Position].Hero = &r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero
 								// 卡牌中的卡牌out
-								r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] = nil
 								// time map
 								r.MonitorCenter.PutHeroInHeroMap(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
 								// monitor init
-								heros.LandingById(r.MonitorCenter.BattleFiled.Positions[land.Position].Hero.Id, r.MonitorCenter)
+								heros.LandingById(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero.Id, r.MonitorCenter)
+								delete(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg, land.CardId)
 							}
 						}
 
@@ -271,7 +281,7 @@ func (r *TestingGame) GameStart() {
 					r.ChOut <- &s
 				case 4:
 					//结束该回合
-					r.GameState = NextGameState(r.GameState)
+					r.GameState.GameState = NextGameState(r.GameState.GameState)
 				case 5:
 					// 查询卡牌和经济
 					s, gs := ServerSession{}, GameSession{}
@@ -289,47 +299,61 @@ func (r *TestingGame) GameStart() {
 				}
 			}
 		case "早上routine":
-			for len(r.MonitorCenter.Time.Actions) != 0 {
-				// 速度排序
-				// 判断事件是否结束 v1 object is dead? v2 target is dead?
-				// 时序问题 monitor first ---- monitor speed?
-				// hero secend ---- 充钱-speed random
-				if !(r.MonitorCenter.Time.Actions[0].HeroAction) {
-					switch r.MonitorCenter.Time.Actions[0].MID {
+			// 12次round past
 
-					}
-				} else {
-					// 当前英雄结束
-					end := false
-					for !end {
-						select {
-						case Heroturn := <-r.Ch:
-							ht := HeroTurn{}
-							gs := GameSession{}
-							json.Unmarshal(Heroturn.Data, &gs)
-							skillsIdList := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID].PositiveSkills
-							skills := []*skills2.Skill{}
-							for _, i2 := range skillsIdList {
-								skills = append(skills, skills2.StrToSkills(monitorfile.SkillsIntToStrMap(i2)))
-							}
-							ht.Skills = skills
-							ht.RemainMoney = r.MonitorCenter.Economy[r.Gamer.ID].Money
-							ht.Hero = r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
-							jht, _ := json.Marshal(ht)
-							r.GameState = string(jht)
-							//json.Marshal()
-							switch gs.GameDatatype {
-							case 0:
-								end = true
-							default:
+			for i := 0; i < 12; i++ {
+				for _, action := range r.MonitorCenter.Time.Actions {
+					fmt.Print(action)
+				}
+				for len(r.MonitorCenter.Time.Actions) != 0 {
+					// 速度排序
+					// 判断事件是否结束 v1 object is dead? v2 target is dead?
+					// 时序问题 monitor first ---- monitor speed?
+					// hero secend ---- 充钱-speed random
+					if !(r.MonitorCenter.Time.Actions[0].HeroAction) {
+						// 定时被动
+					} else {
+						// 当前英雄结束
+						end := false
+						nowHero := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
 
+						ht := HeroTurn{}
+						// skill id select
+						skillsIdList := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID].PositiveSkills
+						skills := []*skills2.Skill{}
+						for _, i2 := range skillsIdList {
+							skill := skills2.StrToSkills(monitorfile.SkillsIntToStrMap(i2))
+							// skill selected unit/position calculate
+
+							skills = append(skills, skill)
+						}
+						// hero turn
+						ht.Skills = skills
+						ht.RemainMoney = r.MonitorCenter.Economy[r.Gamer.ID].Money
+						ht.Hero = r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
+						r.GameState.HT = ht
+						r.GameState.GameState = nowHero.Name + "行动回合！"
+						r.GameState.DataState = 2
+						// hero turn send to client
+						for !end {
+							select {
+							case heroTurn := <-r.Ch:
+
+								gs := GameSession{}
+								json.Unmarshal(heroTurn.Data, &gs)
+								switch gs.GameDatatype {
+								case 0:
+									end = true
+								default:
+
+								}
 							}
 						}
 					}
+					r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
 				}
-				r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
+				r.MonitorCenter.RoundPast()
 			}
-			r.MonitorCenter.RoundPast()
 
 		case "中午":
 			// 中午
@@ -365,4 +389,32 @@ func NextGameState(str string) string {
 	default:
 		return ""
 	}
+}
+
+// skill found selected
+
+func (t *TestingGame) FindSelected(skill *skills2.Skill) *Skill {
+	selected := Selectable{
+		Unit: []*hero.Hero{},
+		Pos:  []*battlefiled.Position{},
+	}
+
+	for _, target := range skill.Targets {
+		switch target {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+			// 自己
+			selected.Unit = append(selected.Unit, skill.Owner)
+		case 4:
+			// 地形
+			//selected.Pos
+		}
+	}
+	result := Skill{
+		Skill:      skill,
+		Selectable: selected,
+	}
+	return &result
 }

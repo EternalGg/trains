@@ -11,11 +11,8 @@ type BattleFiled struct {
 type Position struct {
 	Hero     *hero.Hero  // 单位
 	Machine  *hero.Hero  // 物品
-	Building *hero.Hero  // 建筑
 	Distance map[int]int // 距离
 }
-
-// 1v1游戏地图 29格
 
 func NormalGame() *BattleFiled {
 	f := GameMap29(BattleFiled{Positions: map[int]*Position{}})

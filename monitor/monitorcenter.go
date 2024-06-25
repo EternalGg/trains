@@ -1,8 +1,8 @@
 package monitorcenter
 
 import (
-	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"time"
 	"train/monitor/battlefiled"
@@ -119,15 +119,10 @@ func TimeInit() *Time {
 		Round:       0,
 		TimeQuantum: 0,
 		HeroTime:    map[*hero.Hero]int{},
+		IsNight:     true,
 	}
 }
-func HeroRounds(hero []*hero.Hero) {
-	// 英雄轮换
-	fmt.Print("zzz")
-	for _, h := range hero {
-		fmt.Println(h)
-	}
-}
+
 func (t *MonitorCenter) RoundPast() {
 	// hero round
 	heroList := []*hero.Hero{}
@@ -138,7 +133,15 @@ func (t *MonitorCenter) RoundPast() {
 		}
 	}
 	if len(heroList) != 0 {
-		HeroRounds(heroList)
+		sort.Slice(heroList, func(i, j int) bool {
+			return heroList[i].Speed < heroList[j].Speed
+		})
+	}
+	for _, h := range heroList {
+		a := Action{}
+		a.HeroAction = true
+		a.HID = h.Id
+		t.Time.Actions = append(t.Time.Actions, &a)
 	}
 	// 时间监听
 	t.TimeListener(0)

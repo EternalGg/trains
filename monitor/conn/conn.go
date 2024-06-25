@@ -137,6 +137,7 @@ func LoginSession(player *Player) (result []byte) {
 	switch player.ID {
 	case 0:
 		session.Type = 0
+		session.Data = []byte("未登陆！")
 		result, _ = json.Marshal(session)
 		return
 	default:
@@ -200,7 +201,7 @@ func Conn(w http.ResponseWriter, r *http.Request) {
 					// 休眠 先让GameStart里的Is over=false
 					time.Sleep(1000000)
 
-					for Game.GameState != 5 {
+					for Game.GameState.GameState != "end" {
 						select {
 						case sessions := <-Game.ChOut:
 							result, _ := json.Marshal(sessions)

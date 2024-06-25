@@ -61,15 +61,17 @@ func Spirit1() *monitors.Monitor {
 
 // action skills
 // cost,unit,money,distance
-type Skill struct {
-	Id        int        //id
-	Name      string     //名字
-	Owner     *hero.Hero //单位
-	MovePoint int        //行动点数
-	Money     int        //花费金钱
-	Distance  int        //距离
-	Targets   []int      //0队友 1敌方单位 2中立单位 3自己
-}
+type (
+	Skill struct {
+		Id        int        //id
+		Name      string     //名字
+		Owner     *hero.Hero //单位
+		MovePoint int        //行动点数
+		Money     int        //花费金钱
+		Distance  int        //距离
+		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形
+	}
+)
 
 func StrToSkills(str string) *Skill {
 	switch str {
@@ -91,6 +93,7 @@ func Attack() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
+		Targets:   []int{1, 2},
 	}
 	att.Id = monitorfile.SkillsMap(att.Name)
 	return att
@@ -103,6 +106,7 @@ func Move() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
+		Targets:   []int{4},
 	}
 	move.Id = monitorfile.SkillsMap(move.Name)
 	return move
@@ -115,6 +119,7 @@ func Defence() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  0,
+		Targets:   []int{3},
 	}
 	defence.Id = monitorfile.SkillsMap(defence.Name)
 	return defence
