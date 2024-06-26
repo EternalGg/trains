@@ -82,15 +82,15 @@ type (
 	}
 	Skill struct {
 		Skill      *skills2.Skill // skill
-		Selectable Selectable     // 技能可以选中的目标
+		Selectable *Selectable    // 技能可以选中的目标
 	}
 	Selectable struct {
-		Unit []*hero.Hero            // 可选择的单位
-		Pos  []*battlefiled.Position // 可选择的地图
+		Unit []*hero.Hero // 可选择的单位
+		Pos  []int        // 可选择的地图id
 	}
 	// s->c
 	HeroTurn struct {
-		Skills      []*skills2.Skill
+		Skills      []*Skill
 		RemainMoney int
 		Hero        *hero.Hero
 	}
@@ -260,6 +260,7 @@ func (r *TestingGame) GameStart() {
 								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
 								// position
 								r.MonitorCenter.BattleFiled.Positions[land.Position].Hero = &r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero
+								r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero.Pos = land.Position
 								// 卡牌中的卡牌out
 								// time map
 								r.MonitorCenter.PutHeroInHeroMap(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
@@ -320,17 +321,20 @@ func (r *TestingGame) GameStart() {
 						ht := HeroTurn{}
 						// skill id select
 						skillsIdList := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID].PositiveSkills
-						skills := []*skills2.Skill{}
+						ht.RemainMoney = r.MonitorCenter.Economy[r.Gamer.ID].Money
+						ht.Hero = r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
+						var skills []*Skill
 						for _, i2 := range skillsIdList {
 							skill := skills2.StrToSkills(monitorfile.SkillsIntToStrMap(i2))
-							// skill selected unit/position calculate
+							skill.Owner = ht.Hero
 
-							skills = append(skills, skill)
+							// skill selected unit/position calculate
+							s := r.FindSelected(skill)
+							skills = append(skills, s)
 						}
 						// hero turn
 						ht.Skills = skills
-						ht.RemainMoney = r.MonitorCenter.Economy[r.Gamer.ID].Money
-						ht.Hero = r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
+
 						r.GameState.HT = ht
 						r.GameState.GameState = nowHero.Name + "行动回合！"
 						r.GameState.DataState = 2
@@ -392,29 +396,97 @@ func NextGameState(str string) string {
 }
 
 // skill found selected
-
 func (t *TestingGame) FindSelected(skill *skills2.Skill) *Skill {
 	selected := Selectable{
 		Unit: []*hero.Hero{},
-		Pos:  []*battlefiled.Position{},
+		Pos:  []int{},
 	}
-
+	// 返回所有距离内的pos
+	pos := []*battlefiled.Position{}
+	for i := 0; i < 45; i++ {
+		if t.MonitorCenter.BattleFiled.Positions[i] != nil {
+			fmt.Println(skill.Owner.Pos)
+			fmt.Println(t.MonitorCenter.BattleFiled.Positions[skill.Owner.Pos].Distance[i])
+			if t.MonitorCenter.BattleFiled.Positions[skill.Owner.Pos].Distance[i] <= skill.Distance {
+				pos = append(pos, t.MonitorCenter.BattleFiled.Positions[i])
+			}
+		}
+	}
+	// 筛选
 	for _, target := range skill.Targets {
+		//0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 有物品的地形
 		switch target {
 		case 0:
+			for _, p := range pos {
+				if p.Hero != nil {
+					if p.Hero.Owner == skill.Owner.Owner && p.Hero != skill.Owner {
+						selected.Unit = append(selected.Unit, p.Hero)
+					}
+				}
+				if p.Machine != nil {
+					if p.Machine.Owner == skill.Owner.Owner && p.Machine != skill.Owner {
+						selected.Unit = append(selected.Unit, p.Machine)
+					}
+				}
+			}
 		case 1:
+			for _, p := range pos {
+				if p.Hero != nil {
+					if p.Hero.Owner != skill.Owner.Owner && p.Hero.Owner != 2 {
+						selected.Unit = append(selected.Unit, p.Hero)
+					}
+				}
+				if p.Machine != nil {
+					if p.Machine.Owner != skill.Owner.Owner && p.Machine.Owner != 2 {
+						selected.Unit = append(selected.Unit, p.Machine)
+					}
+				}
+			}
 		case 2:
+			for _, p := range pos {
+				if p.Hero != nil {
+					if p.Hero.Owner == 2 {
+						selected.Unit = append(selected.Unit, p.Hero)
+					}
+				}
+				if p.Machine != nil {
+					if p.Machine.Owner == 2 {
+						selected.Unit = append(selected.Unit, p.Machine)
+					}
+				}
+			}
 		case 3:
 			// 自己
 			selected.Unit = append(selected.Unit, skill.Owner)
 		case 4:
-			// 地形
-			//selected.Pos
+			for _, p := range pos {
+				if p.Hero == nil {
+					selected.Pos = append(selected.Pos, p.Id)
+				}
+			}
+		case 5:
+			for _, p := range pos {
+				if p.Machine == nil {
+					selected.Pos = append(selected.Pos, p.Id)
+				}
+			}
+		case 6:
+			for _, p := range pos {
+				if p.Hero != nil {
+					selected.Pos = append(selected.Pos, p.Id)
+				}
+			}
+		case 7:
+			for _, p := range pos {
+				if p.Machine != nil {
+					selected.Pos = append(selected.Pos, p.Id)
+				}
+			}
 		}
 	}
 	result := Skill{
 		Skill:      skill,
-		Selectable: selected,
+		Selectable: &selected,
 	}
 	return &result
 }

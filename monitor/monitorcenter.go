@@ -184,6 +184,7 @@ func (t *MonitorCenter) NightPast() {
 }
 func (t *MonitorCenter) PutHeroInHeroMap(hero *hero.Hero) {
 	t.Time.Time.HeroTime[hero] = (hero.Speed)
+	t.AddHeroInHeroMap(hero)
 }
 
 // time 类 结束

@@ -9,6 +9,7 @@ type (
 		Tid            int // 临时id
 		Health         int // (最大生命值)总血量
 		THealth        int // 临时血量
+		Pos            int // 位置id
 		Name           string
 		AttackPoint    int
 		ActionPoint    int         //行动点

@@ -9,6 +9,7 @@ type BattleFiled struct {
 }
 
 type Position struct {
+	Id       int
 	Hero     *hero.Hero  // 单位
 	Machine  *hero.Hero  // 物品
 	Distance map[int]int // 距离
@@ -23,167 +24,203 @@ func NormalGame() *BattleFiled {
 func GameMap29(bf BattleFiled) *BattleFiled {
 	// first line
 	bf.Positions[1] = &Position{
+		Id:       1,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[2] = &Position{
+		Id:       2,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[3] = &Position{
+		Id:       3,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[4] = &Position{
+		Id:       4,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[5] = &Position{
+		Id:       5,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	// two line
 	bf.Positions[10] = &Position{
+		Id:       10,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[11] = &Position{
+		Id:       11,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[12] = &Position{
+		Id:       12,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[13] = &Position{
+		Id:       13,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[14] = &Position{
+		Id:       14,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[15] = &Position{
+		Id:       15,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	// three line
 	bf.Positions[20] = &Position{
+		Id:       20,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[21] = &Position{
+		Id:       21,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[22] = &Position{
+		Id:       22,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[23] = &Position{
+		Id:       23,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[24] = &Position{
+		Id:       24,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[25] = &Position{
+		Id:       25,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[26] = &Position{
+		Id:       26,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	// four line
 	bf.Positions[30] = &Position{
+		Id:       30,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[31] = &Position{
+		Id:       31,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[32] = &Position{
+		Id:       32,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[33] = &Position{
+		Id:       33,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[34] = &Position{
+		Id:       34,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[35] = &Position{
+		Id:       35,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	// five line
 	bf.Positions[40] = &Position{
+		Id:       40,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[41] = &Position{
+		Id:       41,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[42] = &Position{
+		Id:       42,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[43] = &Position{
+		Id:       43,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[44] = &Position{
+		Id:       4,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	// base
 	bf.Positions[0] = &Position{
+		Id:       0,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
 	bf.Positions[45] = &Position{
+		Id:       45,
 		Hero:     nil,
 		Machine:  nil,
 		Distance: map[int]int{},
 	}
-
-	return Distance29(bf)
+	Distance29(bf)
+	for i := 0; i < 45; i++ {
+		if bf.Positions[i] != nil {
+			bf.Positions[i].Distance[i] = 0
+		}
+	}
+	return &bf
 }
 
 func Distance29(bf BattleFiled) *BattleFiled {

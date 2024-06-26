@@ -21,7 +21,7 @@ import (
 )
 
 // 返回所有英雄信息 by list
-func xSelectAllHeroByList() (result []*hero.Hero) {
+func SelectAllHeroByList() (result []*hero.Hero) {
 	for i := 1; i < 100; i++ {
 		if ChoseHeroById(i) == nil {
 			return
