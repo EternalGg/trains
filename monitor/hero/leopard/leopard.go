@@ -10,16 +10,17 @@ import (
 
 func LeopardHeroInit() *hero.Hero {
 	leopard := hero.Hero{
-		Id:          monitorfile.HeroNameToint("豹子"),
-		Health:      5,
-		THealth:     5,
-		Name:        "豹子",
-		AttackPoint: 2,
-		Price:       250,
-		ActionPoint: 1,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       8,
+		Id:             monitorfile.HeroNameToint("豹子"),
+		Health:         5,
+		THealth:        5,
+		Name:           "豹子",
+		AttackPoint:    2,
+		Price:          250,
+		ActionPoint:    1,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          8,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &leopard
 }
@@ -44,6 +45,5 @@ func LeopardMonitorInit(mcc *mc.MonitorCenter) {
 	//夜行buff
 	skill1 := Skill1leopard(leopard)
 	skill2 := Skill2leopard(leopard)
-	leopard.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{skill1, skill2})
 }

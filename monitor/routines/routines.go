@@ -1,7 +1,9 @@
 package routines
 
 import (
+	"encoding/json"
 	monitorcenter "train/monitor"
+	"train/monitor/conn/room/notice"
 	"train/monitor/hero/attribute"
 	"train/monitor/hero/dead"
 	"train/monitor/routines/attack"
@@ -9,13 +11,14 @@ import (
 	"train/monitor/routines/damage/takedamage"
 )
 
-func Routines(types interface{}, log *monitorcenter.Logs) {
+func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 	switch types.(type) {
 	case attack.Attack:
 		attackData := types.(attack.Attack)
 		// 攻击流程
 		a := attackData.Processer()
-		log.SubEvent = append(log.SubEvent, a)
+		ja, _ := json.Marshal(a)
+		log.MonitorLogs = append(log.MonitorLogs, notice.AttackResultMade(true, a.AttackerName, ja))
 		// 错误退出
 		if len(a.ErrorSession) != 0 {
 			return
@@ -35,8 +38,9 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 		//fmt.Println(beAttackData.Damage)
 		// processer time
 		ba := beAttackData.Processer()
+		jba, _ := json.Marshal(ba)
 		//fmt.Println(ba.FinalDamage)
-		log.SubEvent = append(log.SubEvent, ba)
+		log.MonitorLogs = append(log.MonitorLogs, notice.BeAttackResultMade(true, ba.Name, jba))
 
 		// 出现错误退出
 		if len(ba.ErrorSession) != 0 {
@@ -60,9 +64,10 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 		takeDamageData := types.(takedamage.TakeDamage)
 		// processer time
 		tdd := takeDamageData.Processer()
-		log.SubEvent = append(log.SubEvent, takeDamageData)
-		// 反弹判断
+		jtdd, _ := json.Marshal(tdd)
+		log.MonitorLogs = append(log.MonitorLogs, notice.TakeDamageResultMade(true, takeDamageData.Name, jtdd))
 
+		// 反弹判断
 		if tdd.HitBack != 0 {
 			// 当攻击者或者被攻击者死亡，不再反弹
 			if takeDamageData.Targets.Health <= 0 || takeDamageData.Attacker.Health <= 0 {
@@ -90,7 +95,7 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 	case dead.Death:
 		//buffs := types.(buff.Buff)
 		//buffs.Processer()
-		log.SubEvent = append(log.SubEvent)
+		//log.SubEvent = append(log.SubEvent)
 	case attribute.Attribute:
 		attr := types.(attribute.Attribute)
 		attr.Positive()
@@ -99,10 +104,7 @@ func Routines(types interface{}, log *monitorcenter.Logs) {
 
 // Gates THE GATES To SERFDOM
 func Gates(types interface{}, mc *monitorcenter.MonitorCenter) {
-	logs := monitorcenter.Logs{
-		MainEvent: types,
-		SubEvent:  make([]interface{}, 0),
-	}
-	Routines(types, &logs)
-	mc.MonitorLogs = append(mc.MonitorLogs, logs)
+	Routines(types, mc)
+	//mc.MonitorLogs = append(mc.MonitorLogs, logs)
+	// should end?
 }

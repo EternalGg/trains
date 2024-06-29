@@ -10,16 +10,17 @@ import (
 
 func ZebraHeroInit() *hero.Hero {
 	Zebra := hero.Hero{
-		Id:          monitorfile.HeroNameToint("斑马"),
-		Health:      5,
-		THealth:     5,
-		Name:        "斑马",
-		AttackPoint: 1,
-		Price:       250,
-		ActionPoint: 1,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       8,
+		Id:             monitorfile.HeroNameToint("斑马"),
+		Health:         5,
+		THealth:        5,
+		Name:           "斑马",
+		AttackPoint:    1,
+		Price:          250,
+		ActionPoint:    1,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          8,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &Zebra
 }
@@ -60,6 +61,5 @@ func ZebraMonitorInit(mcc *mc.MonitorCenter) {
 	// 被动技能 skill2 移动速度光环 附近1距离友方单位移动速度+2 （Speed - 2）
 	skill1 := Skill1Zebra(zb)
 	skill2 := Skill2Zebra(zb)
-	zb.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{skill1, skill2})
 }

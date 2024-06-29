@@ -3,9 +3,9 @@ package monitorcenter
 import (
 	"math/rand"
 	"sort"
-	"strconv"
 	"time"
 	"train/monitor/battlefiled"
+	"train/monitor/conn/room/notice"
 	"train/monitor/economy"
 	"train/monitor/hero"
 	"train/monitor/hero/attribute"
@@ -19,14 +19,10 @@ type (
 		HeroMap      map[int]*hero.Hero        //根据hero id 查找英雄
 		MonitorMap   map[int]*monitors.Monitor //根据monitor id索引monitor
 		MonitorCount map[int]int               //monitor类别的记录
-		MonitorLogs  []Logs                    //记录monitor 所有发生的事情
+		MonitorLogs  []*notice.ActionData      //记录monitor 所有发生的事情
 		BattleFiled  *battlefiled.BattleFiled
 		Time         MonitorTime
 		Economy      map[int]*economy.Economy // map[userid]*economy
-	}
-	Logs struct {
-		MainEvent interface{}
-		SubEvent  []interface{}
 	}
 
 	Worker interface {
@@ -57,42 +53,7 @@ type (
 		PreAttackMonitor
 		BeforeAttackMonitor
 	}
-	AttackCalculate struct {
-		AttackerName       string
-		TargetName         string
-		Name               string
-		Id                 uint
-		BaseDamage         int                       // 基础攻击力
-		DamageAddition     int                       // 攻击加成
-		CriticalHitRate    int                       // 暴击概率
-		CriticalStrikeRate int                       // 暴击倍率加成 0为100%暴击率（无暴击）
-		OtherDamage        int                       // 固定伤害加成
-		IsCritical         bool                      // 是否暴击
-		FinalDamage        int                       // 最终伤害
-		Sessions           []monitors.MonitorSummary // 信息
-		ErrorSession       []int                     // 错误信息
 
-	}
-	BeAttackCalculate struct {
-		Name             string
-		Id               int
-		DogeRate         int                       // 闪避率
-		DamageReduce     int                       // 伤害减免
-		DamageReduceRate int                       // 伤害减免百分比
-		IsDoge           bool                      // 是否闪避
-		FinalDamage      int                       // 最终伤害
-		Sessions         []monitors.MonitorSummary // 信息
-		ErrorSession     []int                     // 错误信息
-		FightBack        bool                      // 反击
-		DamageDepthRate  int                       // 伤害加深率
-		DamageDepth      int                       // 伤害加深数值
-	}
-	TakeDamage struct {
-		Name     string
-		Id       uint
-		HitBack  uint                      // 反弹伤害
-		Sessions []monitors.MonitorSummary // 信息
-	}
 	MakeDamage struct {
 		FinalDamage uint                      // 最终伤害
 		Sessions    []monitors.MonitorSummary // 信息
@@ -126,6 +87,7 @@ func TimeInit() *Time {
 func (t *MonitorCenter) RoundPast() {
 	// hero round
 	heroList := []*hero.Hero{}
+
 	for h, _ := range t.Time.Time.HeroTime {
 		t.Time.Time.HeroTime[h] -= 1
 		if t.Time.Time.HeroTime[h] == 0 {
@@ -140,7 +102,7 @@ func (t *MonitorCenter) RoundPast() {
 	for _, h := range heroList {
 		a := Action{}
 		a.HeroAction = true
-		a.HID = h.Id
+		a.HID = h.Tid
 		t.Time.Actions = append(t.Time.Actions, &a)
 	}
 	// 时间监听
@@ -195,7 +157,7 @@ func MonitorCenterInit(gid int) *MonitorCenter {
 		GID:          gid,
 		HeroMap:      map[int]*hero.Hero{},
 		MonitorMap:   map[int]*monitors.Monitor{},
-		MonitorLogs:  make([]Logs, 0),
+		MonitorLogs:  make([]*notice.ActionData, 0),
 		MonitorCount: map[int]int{},
 		Economy:      map[int]*economy.Economy{},
 	}
@@ -282,10 +244,7 @@ func (mc *MonitorCenter) ListenAndFilter(heroId, listenType int) (result []*moni
 	return
 }
 func (mc *MonitorCenter) MonitorPublish(m *monitors.Monitor) {
-	log := Logs{
-		MainEvent: m,
-		SubEvent:  make([]interface{}, 0),
-	}
+
 	switch m.MID {
 	default:
 		// 默认增加属性
@@ -294,12 +253,9 @@ func (mc *MonitorCenter) MonitorPublish(m *monitors.Monitor) {
 			AttrMap: m.PublishState,
 		}
 		attr.Positive()
-		for i, i2 := range m.PublishState {
-			str := m.Owner.Name + monitorfile.BubbleIdMapToStr(i) + "增加了" + strconv.Itoa(i2)
-			log.SubEvent = append(log.SubEvent, str)
-		}
+		// mc log data
+		mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
 	}
-	mc.MonitorLogs = append(mc.MonitorLogs, log)
 	return
 }
 

@@ -9,16 +9,17 @@ import (
 
 func RhinoHeroInit() *hero.Hero {
 	Rhino := hero.Hero{
-		Id:          monitorfile.HeroNameToint("犀牛"),
-		Health:      9,
-		THealth:     9,
-		Name:        "犀牛",
-		AttackPoint: 3,
-		ActionPoint: 1,
-		Price:       350,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       12,
+		Id:             monitorfile.HeroNameToint("犀牛"),
+		Health:         9,
+		THealth:        9,
+		Name:           "犀牛",
+		AttackPoint:    3,
+		ActionPoint:    1,
+		Price:          350,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          12,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &Rhino
 }
@@ -31,6 +32,5 @@ func RhinoMonitorInit(mcc *mc.MonitorCenter) {
 	rhino := RhinoHeroInit()
 	mcc.AddHeroInHeroMap(rhino)
 	//cl := RhinoMonitorLicense(cr)
-	rhino.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

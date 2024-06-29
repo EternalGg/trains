@@ -15,6 +15,26 @@ type (
 		Damage   int        //固定技能
 		Mc       *mc.MonitorCenter
 	}
+	BeAttackWithOutMc struct {
+		Name     string
+		Attacker *hero.Hero //攻击者
+		Targets  *hero.Hero //攻击目标
+	}
+	BeAttackCalculate struct {
+		BA               *BeAttackWithOutMc
+		Name             string
+		Id               int
+		DogeRate         int                       // 闪避率
+		DamageReduce     int                       // 伤害减免
+		DamageReduceRate int                       // 伤害减免百分比
+		IsDoge           bool                      // 是否闪避
+		FinalDamage      int                       // 最终伤害
+		Sessions         []monitors.MonitorSummary // 信息
+		ErrorSession     []int                     // 错误信息
+		FightBack        bool                      // 反击
+		DamageDepthRate  int                       // 伤害加深率
+		DamageDepth      int                       // 伤害加深数值
+	}
 )
 
 func (B *BeAttack) Checker() (result []int) {
@@ -28,7 +48,7 @@ func (B *BeAttack) Checker() (result []int) {
 }
 
 // Calculator 计算闪避率,伤害减免,伤害减免百分比
-func (B *BeAttack) Calculator() (result mc.BeAttackCalculate, beAttack []*monitors.Monitor) {
+func (B *BeAttack) Calculator() (result BeAttackCalculate, beAttack []*monitors.Monitor) {
 	beAttack = B.Mc.ListenAndFilter(
 		B.Attacker.Id,
 		monitorfile.MonitorIdMap("被攻击"))
@@ -57,7 +77,7 @@ func (B *BeAttack) Calculator() (result mc.BeAttackCalculate, beAttack []*monito
 	return
 }
 
-func (B *BeAttack) Processer() (BA mc.BeAttackCalculate) {
+func (B *BeAttack) Processer() (BA BeAttackCalculate) {
 	// check time
 	//BA.ErrorSession = B.Checker()
 	if len(BA.ErrorSession) >= 1 {
@@ -90,6 +110,11 @@ func (B *BeAttack) Processer() (BA mc.BeAttackCalculate) {
 
 	BA.Name = B.Name
 	B.Later()
+	BA.BA = &BeAttackWithOutMc{
+		Name:     B.Name,
+		Attacker: B.Attacker,
+		Targets:  B.Targets,
+	}
 	return
 }
 

@@ -15,13 +15,26 @@ type (
 		Damage   int        //技能
 		Mc       *mc.MonitorCenter
 	}
+	TakeDamageWithOutMC struct {
+		Name     string
+		Attacker *hero.Hero //攻击者
+		Targets  *hero.Hero //攻击目标
+		Damage   int        //技能
+	}
+	TakeDamageCalculate struct {
+		TD       *TakeDamageWithOutMC
+		Name     string
+		Id       uint
+		HitBack  uint                      // 反弹伤害
+		Sessions []monitors.MonitorSummary // 信息
+	}
 )
 
 func (d *TakeDamage) Checker() {
 
 }
 
-func (d *TakeDamage) Calculator() (result mc.TakeDamage, blood []*monitors.Monitor) {
+func (d *TakeDamage) Calculator() (result *TakeDamageCalculate, blood []*monitors.Monitor) {
 	blood = d.Mc.ListenAndFilter(d.Targets.Tid,
 		monitorfile.MonitorIdMap("掉血"))
 	//fmt.Println("start")
@@ -44,7 +57,8 @@ func (d *TakeDamage) Calculator() (result mc.TakeDamage, blood []*monitors.Monit
 	return
 }
 
-func (d *TakeDamage) Processer() (result mc.TakeDamage) {
+func (d *TakeDamage) Processer() (result *TakeDamageCalculate) {
+
 	// checker time
 	d.Checker()
 	// calculate time
@@ -55,8 +69,14 @@ func (d *TakeDamage) Processer() (result mc.TakeDamage) {
 	if len(blood) != 0 {
 		d.Mc.MonitorsPublish(blood)
 	}
+	result.TD = &TakeDamageWithOutMC{
+		Name:     d.Name,
+		Attacker: d.Attacker,
+		Targets:  d.Targets,
+		Damage:   d.Damage,
+	}
 	return result
 }
 
-func (d *TakeDamage) Later(td *mc.TakeDamage) {
+func (d *TakeDamage) Later(td *TakeDamageCalculate) {
 }

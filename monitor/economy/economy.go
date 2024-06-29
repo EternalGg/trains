@@ -2,6 +2,7 @@ package economy
 
 import (
 	"sort"
+	"train/monitor/conn/room/notice"
 	"train/monitor/economy/bank"
 	"train/monitor/economy/shop"
 	"train/monitor/hero"
@@ -70,22 +71,24 @@ func (e *Economy) ChoseBefore(hero map[int]*hero.Hero) {
 // errorcode 1:金钱不足
 // errorcode 2:购买cd
 // errorcode 3:不存在该hid
-func (e *Economy) BuyHero(hid int) BuyData {
+func (e *Economy) BuyHero(hid int) *notice.ActionData {
 	buy := BuyData{}
+
 	// 3
 	if e.BaseShop.Cards[hid] == nil {
 		buy.ErrorCode = 3
-		return buy
+		return notice.BuyResultMade(false, "购买卡牌不存在该cardid", hid, e.Money, 0, 3)
 	}
 	// 1.查看剩余金钱是否大于售价
 	if e.BaseShop.Cards[hid].Hero.Price > e.Money {
 		buy.ErrorCode = 1
-		return buy
+		return notice.BuyResultMade(false, "购买卡牌金钱不足", hid, e.Money, 0, 1)
+
 	}
 	// 2.查看购买cd
 	if e.BaseShop.Cards[hid].BuyCd > 0 {
 		buy.ErrorCode = 2
-		return buy
+		return notice.BuyResultMade(false, "购买卡牌cd不足", hid, e.Money, 0, 2)
 	}
 	// 3.购买
 	// 扣除钱
@@ -96,16 +99,18 @@ func (e *Economy) BuyHero(hid int) BuyData {
 	e.AddCardFromPKG(e.BaseShop.Cards[hid])
 	buy.BuyMoney = e.BaseShop.Cards[hid].Hero.Price
 	buy.HeroName = e.BaseShop.Cards[hid].Hero.Name
-	return buy
+	return notice.BuyResultMade(true, "卡牌购买成功！", hid, e.Money, buy.BuyMoney, 0)
+
 }
 
 // 卖
-func (e *Economy) SaleHero(point int) SaleData {
+func (e *Economy) SaleHero(point int) *notice.ActionData {
 	// error code 1:没有此卡牌
 	sale := SaleData{}
+
 	if e.CardsPkg[point] == nil {
 		sale.ErrorCode = 1
-		return sale
+		return notice.SaleResultMade(false, "手牌中没有该卡牌", 1, point, 0, e.Money)
 	}
 	// 钱到账
 	saleMoney := (e.CardsPkg[(point)].Hero.Price * 6) / 10
@@ -114,7 +119,7 @@ func (e *Economy) SaleHero(point int) SaleData {
 	sale.HeroName = e.CardsPkg[point].Hero.Name
 	// 删除卡牌从卡组
 	e.DeleteCardFromPKG((point))
-	return sale
+	return notice.SaleResultMade(true, "出售成功！", 0, point, sale.SaleMoney, e.Money)
 }
 
 // banks

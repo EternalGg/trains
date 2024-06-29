@@ -9,16 +9,17 @@ import (
 
 func FlameGolemHeroInit() *hero.Hero {
 	FlameGolem := hero.Hero{
-		Id:          monitorfile.HeroNameToint("烈焰魔像"),
-		Health:      7,
-		THealth:     7,
-		Name:        "烈焰魔像",
-		AttackPoint: 3,
-		Price:       450,
-		ActionPoint: 1,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       10,
+		Id:             monitorfile.HeroNameToint("烈焰魔像"),
+		Health:         7,
+		THealth:        7,
+		Name:           "烈焰魔像",
+		AttackPoint:    3,
+		Price:          450,
+		ActionPoint:    1,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          10,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &FlameGolem
 }
@@ -31,6 +32,5 @@ func FlameGolemMonitorInit(mcc *mc.MonitorCenter) {
 	flame := FlameGolemHeroInit()
 	mcc.AddHeroInHeroMap(flame)
 	//cl := FlameGolemMonitorLicense(cr)
-	flame.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

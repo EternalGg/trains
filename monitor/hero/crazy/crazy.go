@@ -10,16 +10,17 @@ import (
 // 狂战士init
 func CrazyHeroInit() *hero.Hero {
 	crazy := hero.Hero{
-		Id:          monitorfile.HeroNameToint("狂战士"),
-		Health:      7,
-		THealth:     7,
-		Name:        "狂战士",
-		AttackPoint: 3,
-		Price:       600,
-		ActionPoint: 1,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       10,
+		Id:             monitorfile.HeroNameToint("狂战士"),
+		Health:         7,
+		THealth:        7,
+		Name:           "狂战士",
+		AttackPoint:    3,
+		Price:          600,
+		ActionPoint:    1,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          10,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &crazy
 }
@@ -61,8 +62,8 @@ func CrazyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 
 func CrazyMonitorInit(mcc *mc.MonitorCenter) {
 	cr := CrazyHeroInit()
+
 	mcc.AddHeroInHeroMap(cr)
 	cl := CrazyMonitorLicense(cr)
-	cr.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{cl})
 }

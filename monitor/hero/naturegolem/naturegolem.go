@@ -9,16 +9,17 @@ import (
 
 func NatureGolemHeroInit() *hero.Hero {
 	NatureGolem := hero.Hero{
-		Id:          monitorfile.HeroNameToint("自然魔像"),
-		Health:      7,
-		THealth:     7,
-		Name:        "自然魔像",
-		AttackPoint: 3,
-		Price:       450,
-		ActionPoint: 1,
-		GameTempo:   map[int]int{},
-		RoundTempo:  map[int]int{},
-		Speed:       10,
+		Id:             monitorfile.HeroNameToint("自然魔像"),
+		Health:         7,
+		THealth:        7,
+		Name:           "自然魔像",
+		AttackPoint:    3,
+		Price:          450,
+		ActionPoint:    1,
+		GameTempo:      map[int]int{},
+		RoundTempo:     map[int]int{},
+		Speed:          10,
+		PositiveSkills: []int{1, 2, 3},
 	}
 	return &NatureGolem
 }
@@ -31,6 +32,5 @@ func NatureGolemMonitorInit(mcc *mc.MonitorCenter) {
 	nature := NatureGolemHeroInit()
 	mcc.AddHeroInHeroMap(nature)
 	//cl := NatureGolemMonitorLicense(cr)
-	nature.PositiveSkills = []int{1, 2, 3}
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

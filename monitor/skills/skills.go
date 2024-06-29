@@ -69,7 +69,7 @@ type (
 		MovePoint int        //行动点数
 		Money     int        //花费金钱
 		Distance  int        //距离
-		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形
+		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形 8 随机目标或者无目标
 	}
 )
 
@@ -119,7 +119,7 @@ func Defence() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  0,
-		Targets:   []int{3},
+		Targets:   []int{8},
 	}
 	defence.Id = monitorfile.SkillsMap(defence.Name)
 	return defence
