@@ -1,6 +1,8 @@
 package battlefiled
 
 import (
+	"fmt"
+	"train/monitor/conn/room/notice"
 	"train/monitor/hero"
 )
 
@@ -445,4 +447,12 @@ func DistanceCompute29(bf *BattleFiled) *BattleFiled {
 	}
 
 	return bf
+}
+
+func (b *BattleFiled) HeroMove(p1, p2 *Position, h *hero.Hero) *notice.ActionData {
+	p2.Hero = p1.Hero
+	p1.Hero = nil
+	h.Pos = p2.Id
+	fmt.Println(h.Pos, "英雄移动到了这里！")
+	return notice.MoveResultMade(true, "移动成功", h, p1.Id, p2.Id, 0)
 }

@@ -16,7 +16,7 @@ func CrazyHeroInit() *hero.Hero {
 		Name:           "狂战士",
 		AttackPoint:    3,
 		Price:          600,
-		ActionPoint:    1,
+		ActionPoint:    3,
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          10,

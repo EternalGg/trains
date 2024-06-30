@@ -53,12 +53,18 @@ type (
 	LandingResult struct {
 		Success     bool
 		Str         string     //是否成功登陆
-		Errcode     int        //错误代码
+		ErrCode     int        //错误代码
 		LandingHero *hero.Hero //登场卡牌
 		LandingPos  int        //登场位置
 	}
 	// MoveData ID = 5 ActionName = 移动数据
 	MoveResult struct {
+		Success     bool
+		Str         string
+		ErrCode     int
+		LandingHero *hero.Hero //移动英雄
+		StartPos    int        //初始位置
+		LandingPos  int        //移动位置
 	}
 	// BubbleData ID = 6 ActionName = 泡泡数据
 	BubbleResult struct {
@@ -92,6 +98,32 @@ type (
 	}
 )
 
+func MoveResultMade(s bool, str string, h *hero.Hero, start, landing, errcode int) *ActionData {
+	m := MoveResult{
+		Success:     s,
+		Str:         str,
+		ErrCode:     errcode,
+		LandingHero: h,
+		StartPos:    start,
+		LandingPos:  landing,
+	}
+	jm, _ := json.Marshal(m)
+	AD := ActionData{
+		ID:         5,
+		ActionName: "移动",
+		Data:       jm,
+	}
+	return &AD
+}
+func ActionStart() *ActionData {
+	s := ActionStartEnd{IsStart: true}
+	js, _ := json.Marshal(s)
+	return &ActionData{
+		ID:         0,
+		ActionName: "开始",
+		Data:       js,
+	}
+}
 func SaleResultMade(s bool, str string, err, cardid, salemoney, remainmoney int) *ActionData {
 	SR := SaleResult{
 		Success:     s,
@@ -130,7 +162,7 @@ func LandingResultMade(s bool, str string, h *hero.Hero, err, pos int) *ActionDa
 	lr := LandingResult{
 		Success:     s,
 		Str:         str,
-		Errcode:     err,
+		ErrCode:     err,
 		LandingHero: h,
 		LandingPos:  pos,
 	}

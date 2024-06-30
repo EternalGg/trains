@@ -260,7 +260,6 @@ func (r *TestingGame) GameStart() {
 						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
 						//	fmt.Println(i, i2)
 						//}
-						//fmt.Println(r.MonitorCenter.BattleFiled.Positions[land.Position] != nil, r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId], r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil, r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId], r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil)
 						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
 							// 如果没有这个bf
 							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
@@ -333,10 +332,10 @@ func (r *TestingGame) GameStart() {
 		case "早上routine":
 			// 12次round past
 			// todo
-			// 英雄释放技能后扣除资源/结束回合后恢复ActionPoint
+			// 英雄释放技能前扣除资源
 			// 技能的判断和释放 以及Notice返回
+			// 结束回合后恢复ActionPoint
 			// 所有技能，行动的monitor化
-
 			for i := 0; i < 13; i++ {
 				//fmt.Println(r.MonitorCenter.Time.Actions)
 				for len(r.MonitorCenter.Time.Actions) != 0 {
@@ -350,41 +349,63 @@ func (r *TestingGame) GameStart() {
 						// 当前英雄结束
 						end := false
 						nowHero := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
-						ht := r.SkillsDynamicUpdates(nowHero)
-						r.GameState.HT = *ht
+						HT := r.SkillsDynamicUpdates(nowHero)
+						r.GameState.HT = *HT
 						r.GameState.GameState = nowHero.Name + "行动回合！"
 						r.GameState.DataState = 2
 						// hero turn send to client
-
-						// 判断读入的技能，资源（金钱，活动点数等）是否足够
-						// 判断目标是否在距离范围内
-						// 两个判断充足 扣减资源 发动技能
-						//
 						for !end {
 							select {
+							// 判断skill的Available 如果==true
+							// 如果存在 查询目标是否在selected中
+							// 如果可以释放 两个判断结束 资源扣除后释放技能
 							case heroTurn := <-r.Ch:
-								end = true
 								gs := GameSession{}
 								json.Unmarshal(heroTurn.Data, &gs)
 								move := Move{}
 								json.Unmarshal(gs.GameData, &move)
+								fmt.Println(move.SkillId, move.TargetId, "zzzzzzz")
 								no := &notice.Notice{}
-								switch move.SkillId {
-								case 0:
-									// 结束回合
-									n := notice.TurnEndResultMade(true, 0)
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, n)
-									no = notice.ActionToNotice([]notice.ActionData{*n}, "结束英雄回合", 0)
-								case 2:
-									//var m *skills2.Skill
-									//for _, value := range skills {
-									//	if value.Skill.Id == 2 {
-									//		m = value.Skill
-									//	}
-									//}
+								state, skill := r.SkillJudgeAndReduce(HT, move.TargetId, move.SkillId)
+								h, p := skill.FindTarget(move.TargetId)
+								fmt.Println(h, p)
+								if state == 0 {
+									if skill.Selectable == nil {
+										break
+									}
+									switch state {
+									case 1:
+									case 2:
+									case 3:
+									default:
+										switch skill.Skill.Id {
+										case 0:
+											// 结束回合
+											fmt.Println("end!")
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+
+											n := notice.TurnEndResultMade(true, 0)
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, n)
+											no = r.LogToNotice()
+											end = true
+											// monitor end select and publish 扫描monitor
+											// 从monitor log里 从后向上找直到第一个actionStart 然后弄成notice返回
+										case 2:
+											fmt.Println("move!")
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+											move := r.MonitorCenter.BattleFiled.HeroMove(
+												r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
+												r.MonitorCenter.BattleFiled.Positions[p],
+												nowHero)
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
+											no = r.LogToNotice()
+											HT = r.SkillsDynamicUpdates(nowHero)
+											r.GameState.HT = *HT
+										}
+									}
 
 								}
-								ht = r.SkillsDynamicUpdates(nowHero)
+
 								s, gs := ServerSession{}, GameSession{}
 								s.Type = 3
 								gs.GameDatatype = 7
@@ -398,7 +419,6 @@ func (r *TestingGame) GameStart() {
 					}
 					r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
 				}
-
 				r.MonitorCenter.RoundPast()
 
 			}
@@ -549,7 +569,7 @@ func (t *TestingGame) FindSelected(skill *skills2.Skill, remainMoney int, h *her
 		result.NotAvailable = append(result.NotAvailable, 1)
 	}
 	// 判断英雄剩余金钱是否足够
-	fmt.Println(result.Selectable, result.NotAvailable, result.Available)
+	//fmt.Println(result.Selectable, result.NotAvailable, result.Available)
 	return &result
 }
 
@@ -566,7 +586,10 @@ func (r *TestingGame) SkillsDynamicUpdates(h *hero.Hero) *HeroTurn {
 		skill.Owner = ht.Hero
 		// skill selected unit/position calculate
 		s := r.FindSelected(skill, ht.RemainMoney, h)
-
+		//fmt.Print(s.Skill, s.Selectable.SelectPoint)
+		//for _, po := range s.Selectable.Pos {
+		//	fmt.Println(po)
+		//}
 		skills = append(skills, s)
 	}
 
@@ -574,4 +597,81 @@ func (r *TestingGame) SkillsDynamicUpdates(h *hero.Hero) *HeroTurn {
 	ht.Skills = skills
 
 	return &ht
+}
+
+// success := 0 成功扣减
+// errcode := 1 没有该技能！
+// errcode := 2 资源不足或者没有目标！
+// errcode := 3 没有该目标！
+func (r *TestingGame) SkillJudgeAndReduce(h *HeroTurn, targetId, skillId int) (int, *Skill) {
+	// 判断技能是否存在
+	var skill *Skill
+
+	for _, skills := range h.Skills {
+		if skillId == skills.Skill.Id {
+			skill = skills
+			break
+		}
+	}
+	if skill.Selectable.SelectPoint == 0 && skill.Available {
+		return 0, skill
+	}
+	if skill == nil {
+		return 1, nil
+	}
+	if !skill.Available {
+		return 2, nil
+	}
+	// 判断目标是否存在
+	if skill.Selectable.SelectPoint < targetId {
+		return 3, nil
+	}
+	// 判断成功 扣除资源
+
+	r.MonitorCenter.Economy[r.Gamer.ID].Money -= skill.Skill.Money
+	h.Hero.ActionPoint -= skill.Skill.MovePoint
+	return 0, skill
+}
+
+func (r *TestingGame) LogToNotice() *notice.Notice {
+	start := 0
+	for i := len(r.MonitorCenter.MonitorLogs) - 1; i > 0; i-- {
+		if r.MonitorCenter.MonitorLogs[i].ID == 0 {
+			start = i + 1
+			break
+		}
+	}
+	result := notice.Notice{
+		NoticeName: "",
+		Id:         0,
+		Actions:    []notice.ActionData{},
+	}
+	result.NoticeName = r.MonitorCenter.MonitorLogs[start].ActionName
+	result.Id = r.MonitorCenter.MonitorLogs[start].ID
+	for j := start; j < len(r.MonitorCenter.MonitorLogs); j++ {
+		result.Actions = append(result.Actions, *r.MonitorCenter.MonitorLogs[j])
+	}
+	return &result
+}
+
+func (s *Skill) FindTarget(p int) (*hero.Hero, int) {
+	if s.Selectable.Unit != nil {
+
+		for i := 0; i < len(s.Selectable.Unit); i++ {
+			p--
+			if p == 0 {
+				return s.Selectable.Unit[i], 0
+			}
+		}
+
+	}
+	if s.Selectable.Pos != nil {
+		for i := 0; i < len(s.Selectable.Pos); i++ {
+			p--
+			if p == 0 {
+				return nil, s.Selectable.Pos[i]
+			}
+		}
+	}
+	return nil, 0
 }
