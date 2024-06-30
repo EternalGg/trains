@@ -69,7 +69,8 @@ type (
 		MovePoint int        //行动点数
 		Money     int        //花费金钱
 		Distance  int        //距离
-		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形 8 随机目标或者无目标
+		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形
+		NoTarget  bool
 	}
 )
 
@@ -81,6 +82,8 @@ func StrToSkills(str string) *Skill {
 		return Move()
 	case "防守":
 		return Defence()
+	case "结束回合":
+		return EndHeroTurn()
 	default:
 		return nil
 	}
@@ -89,11 +92,13 @@ func StrToSkills(str string) *Skill {
 // 默认近战攻击
 func Attack() *Skill {
 	att := &Skill{
+		Id:        1,
 		Name:      "攻击",
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
 		Targets:   []int{1, 2},
+		NoTarget:  false,
 	}
 	att.Id = monitorfile.SkillsMap(att.Name)
 	return att
@@ -102,11 +107,13 @@ func Attack() *Skill {
 // 默认移动
 func Move() *Skill {
 	move := &Skill{
+		Id:        2,
 		Name:      "移动",
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
 		Targets:   []int{4},
+		NoTarget:  false,
 	}
 	move.Id = monitorfile.SkillsMap(move.Name)
 	return move
@@ -115,12 +122,26 @@ func Move() *Skill {
 // 默认防守
 func Defence() *Skill {
 	defence := &Skill{
+		Id:        3,
 		Name:      "防守",
 		MovePoint: 1,
 		Money:     0,
 		Distance:  0,
-		Targets:   []int{8},
+		Targets:   []int{},
+		NoTarget:  true,
 	}
 	defence.Id = monitorfile.SkillsMap(defence.Name)
 	return defence
+}
+
+func EndHeroTurn() *Skill {
+	end := &Skill{
+		Id:        4,
+		Name:      "结束回合",
+		MovePoint: 0,
+		Money:     0,
+		Distance:  0,
+		NoTarget:  true,
+	}
+	return end
 }

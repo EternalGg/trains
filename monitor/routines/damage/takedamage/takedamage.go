@@ -1,6 +1,7 @@
 package takedamage
 
 import (
+	"fmt"
 	mc "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
@@ -22,11 +23,10 @@ type (
 		Damage   int        //技能
 	}
 	TakeDamageCalculate struct {
-		TD       *TakeDamageWithOutMC
-		Name     string
-		Id       uint
-		HitBack  uint                      // 反弹伤害
-		Sessions []monitors.MonitorSummary // 信息
+		TD      *TakeDamageWithOutMC
+		Name    string
+		Id      uint
+		HitBack uint // 反弹伤害
 	}
 )
 
@@ -34,10 +34,16 @@ func (d *TakeDamage) Checker() {
 
 }
 
-func (d *TakeDamage) Calculator() (result *TakeDamageCalculate, blood []*monitors.Monitor) {
-	blood = d.Mc.ListenAndFilter(d.Targets.Tid,
+func (d *TakeDamage) Calculator() (*TakeDamageCalculate, []*monitors.Monitor) {
+	blood := d.Mc.ListenAndFilter(d.Targets.Tid,
 		monitorfile.MonitorIdMap("掉血"))
 	//fmt.Println("start")
+	result := TakeDamageCalculate{
+		TD:      nil,
+		Name:    "被攻击！",
+		Id:      0,
+		HitBack: 0,
+	}
 	for _, monitor := range blood {
 		//fmt.Println(monitor)
 		for key, value := range monitor.Bubble {
@@ -47,17 +53,12 @@ func (d *TakeDamage) Calculator() (result *TakeDamageCalculate, blood []*monitor
 				result.HitBack += uint(value)
 			}
 		}
-		m := monitors.MonitorSummary{
-			Name:    monitor.MID,
-			Summary: monitor.Bubble,
-		}
-		result.Sessions = append(result.Sessions, m)
 	}
 	//fmt.Println("end")
-	return
+	return &result, blood
 }
 
-func (d *TakeDamage) Processer() (result *TakeDamageCalculate) {
+func (d *TakeDamage) Processer() *TakeDamageCalculate {
 
 	// checker time
 	d.Checker()
@@ -69,12 +70,14 @@ func (d *TakeDamage) Processer() (result *TakeDamageCalculate) {
 	if len(blood) != 0 {
 		d.Mc.MonitorsPublish(blood)
 	}
-	result.TD = &TakeDamageWithOutMC{
+	td := TakeDamageWithOutMC{
 		Name:     d.Name,
 		Attacker: d.Attacker,
 		Targets:  d.Targets,
 		Damage:   d.Damage,
 	}
+	fmt.Println(td, result)
+	result.TD = &td
 	return result
 }
 

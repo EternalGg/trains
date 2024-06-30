@@ -83,52 +83,53 @@ func ChoseHeroById(id int) *hero.Hero {
 	}
 }
 
-func LandingById(id int, mc *monitorcenter.MonitorCenter) {
-	switch id {
+// monitors init
+func Landing(hero *hero.Hero, mc *monitorcenter.MonitorCenter) {
+	switch hero.Id {
 	case 1:
-		crazy.CrazyMonitorInit(mc)
+		crazy.CrazyMonitorInit(mc, hero)
 		return
 	case 2:
-		ele.EleMonitorInit(mc)
+		ele.EleMonitorInit(mc, hero)
 		return
 	case 3:
-		hippo.HippoMonitorInit(mc)
+		hippo.HippoMonitorInit(mc, hero)
 		return
 	case 4:
-		rhino.RhinoMonitorInit(mc)
+		rhino.RhinoMonitorInit(mc, hero)
 		return
 	case 5:
-		leopard.LeopardMonitorInit(mc)
+		leopard.LeopardMonitorInit(mc, hero)
 		return
 	case 6:
-		crocodile.CrocodileMonitorInit(mc)
+		crocodile.CrocodileMonitorInit(mc, hero)
 		return
 	case 7:
-		soldiers.SoldiersMonitorInit(mc)
+		soldiers.SoldiersMonitorInit(mc, hero)
 		return
 	case 8:
-		zebra.ZebraMonitorInit(mc)
+		zebra.ZebraMonitorInit(mc, hero)
 		return
 	case 9:
-		jugg.JuggMonitorInit(mc)
+		jugg.JuggMonitorInit(mc, hero)
 		return
 	case 10:
-		NatureGolem.NatureGolemMonitorInit(mc)
+		NatureGolem.NatureGolemMonitorInit(mc, hero)
 		return
 	case 11:
-		flamegolem.FlameGolemMonitorInit(mc)
+		flamegolem.FlameGolemMonitorInit(mc, hero)
 		return
 	case 12:
-		octopus.OctopusMonitorInit(mc)
+		octopus.OctopusMonitorInit(mc, hero)
 		return
 	case 13:
-		lion.LionMonitorInit(mc)
+		lion.LionMonitorInit(mc, hero)
 		return
 	case 14:
-		fly.FlyMonitorInit(mc)
+		fly.FlyMonitorInit(mc, hero)
 		return
 	case 15:
-		deer.DeerMonitorInit(mc)
+		deer.DeerMonitorInit(mc, hero)
 	default:
 		return
 	}

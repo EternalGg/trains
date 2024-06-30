@@ -20,7 +20,7 @@ func LionHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          8,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Lion
 }
@@ -29,9 +29,9 @@ func LionMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func LionMonitorInit(mcc *mc.MonitorCenter) {
-	lion := LionHeroInit()
-	mcc.AddHeroInHeroMap(lion)
+func LionMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//lion := LionHeroInit()
+	//mcc.AddHeroInHeroMap(lion)
 	//cl := LionMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

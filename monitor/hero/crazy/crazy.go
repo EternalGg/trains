@@ -20,7 +20,7 @@ func CrazyHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          10,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &crazy
 }
@@ -60,10 +60,12 @@ func CrazyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func CrazyMonitorInit(mcc *mc.MonitorCenter) {
-	cr := CrazyHeroInit()
+func CrazyMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	cl := CrazyMonitorLicense(h)
+	mcc.MonitorsActive([]*monitors.Monitor{cl})
+}
 
-	mcc.AddHeroInHeroMap(cr)
-	cl := CrazyMonitorLicense(cr)
+func CrazyAIMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	cl := CrazyMonitorLicense(h)
 	mcc.MonitorsActive([]*monitors.Monitor{cl})
 }

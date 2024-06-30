@@ -145,8 +145,10 @@ func (t *MonitorCenter) NightPast() {
 	t.TimeListener(3)
 }
 func (t *MonitorCenter) PutHeroInHeroMap(hero *hero.Hero) {
-	t.Time.Time.HeroTime[hero] = (hero.Speed)
 	t.AddHeroInHeroMap(hero)
+}
+func (t *MonitorCenter) PutHeroInTimeMap(hero *hero.Hero) {
+	t.Time.Time.HeroTime[hero] = (hero.Speed)
 }
 
 // time 类 结束
@@ -333,9 +335,6 @@ func (mc *MonitorCenter) BattleFiledListen() {
 
 }
 func (mc *MonitorCenter) BattleFiledSign() {
-
-}
-func (mc *MonitorCenter) HeroLanding(hid int, bfid int) {
 
 }
 

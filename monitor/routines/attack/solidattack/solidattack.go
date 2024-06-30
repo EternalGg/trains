@@ -4,6 +4,7 @@ import (
 	mc "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
+	"train/monitor/routines/attack/data"
 )
 
 type SolidAttack struct {
@@ -18,7 +19,7 @@ func (a *SolidAttack) Checker() {
 
 }
 
-func (a *SolidAttack) Calculator() (result mc.AttackCalculate) {
+func (a *SolidAttack) Calculator() (result data.AttackCalculate) {
 
 	attackerBefore := a.Mc.ListenAndFilter(
 		a.Attacker.Id,

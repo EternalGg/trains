@@ -4,7 +4,7 @@ import (
 	mc "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
-	"train/monitor/monitors"
+	"train/monitor/routines/attack/data"
 	"train/monitor/routines/attack/normalattack"
 	"train/monitor/routines/attack/solidattack"
 )
@@ -19,28 +19,6 @@ type (
 		Damage   int
 		Mc       *mc.MonitorCenter
 	}
-	AttackWithOutMc struct {
-		Name     string
-		Attacker *hero.Hero //攻击者
-		Targets  *hero.Hero //攻击目标
-	}
-	AttackCalculate struct {
-		A                  AttackWithOutMc
-		AttackerName       string
-		TargetName         string
-		Name               string
-		Id                 uint
-		BaseDamage         int                       // 基础攻击力
-		DamageAddition     int                       // 攻击加成
-		CriticalHitRate    int                       // 暴击概率
-		CriticalStrikeRate int                       // 暴击倍率加成 0为100%暴击率（无暴击）
-		OtherDamage        int                       // 固定伤害加成
-		IsCritical         bool                      // 是否暴击
-		FinalDamage        int                       // 最终伤害
-		Sessions           []monitors.MonitorSummary // 信息
-		ErrorSession       []int                     // 错误信息
-
-	}
 )
 
 func (a *Attack) Checker() (result []int) {
@@ -52,7 +30,7 @@ func (a *Attack) Checker() (result []int) {
 	}
 	return
 }
-func (a *Attack) Calculator() (result AttackCalculate) {
+func (a *Attack) Calculator() (result data.AttackCalculate) {
 	if a.Damage == 0 {
 		sa := normalattack.SingleAttack{
 			Attacker: a.Attacker,
@@ -76,7 +54,7 @@ func (a *Attack) Calculator() (result AttackCalculate) {
 	return
 }
 
-func (a *Attack) Processer() (ad AttackCalculate) {
+func (a *Attack) Processer() (ad data.AttackCalculate) {
 	// checker time
 	if len(a.Checker()) >= 1 {
 		return

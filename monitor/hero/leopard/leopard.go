@@ -20,7 +20,7 @@ func LeopardHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          8,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &leopard
 }
@@ -36,14 +36,14 @@ func Skill2leopard(hero *hero.Hero) (result *monitors.Monitor) {
 	return night
 }
 
-func LeopardMonitorInit(mcc *mc.MonitorCenter) {
-	leopard := LeopardHeroInit()
-	mcc.AddHeroInHeroMap(leopard)
+func LeopardMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//leopard := LeopardHeroInit()
+	//mcc.AddHeroInHeroMap(leopard)
 	//skill1
 	//野兽buff
 	//skill2
 	//夜行buff
-	skill1 := Skill1leopard(leopard)
-	skill2 := Skill2leopard(leopard)
+	skill1 := Skill1leopard(h)
+	skill2 := Skill2leopard(h)
 	mcc.MonitorsActive([]*monitors.Monitor{skill1, skill2})
 }

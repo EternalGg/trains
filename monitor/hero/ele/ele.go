@@ -19,7 +19,7 @@ func EleHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Ele
 }
@@ -28,9 +28,8 @@ func EleHeroInit() *hero.Hero {
 //	return
 //}
 
-func EleMonitorInit(mcc *mc.MonitorCenter) {
-	ele := EleHeroInit()
-	mcc.AddHeroInHeroMap(ele)
+func EleMonitorInit(mcc *mc.MonitorCenter, hero *hero.Hero) {
+	//mcc.AddHeroInHeroMap(ele)
 	//cl := EleMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

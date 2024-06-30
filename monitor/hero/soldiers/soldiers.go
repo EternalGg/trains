@@ -19,7 +19,7 @@ func SoldiersHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Soldiers
 }
@@ -28,9 +28,9 @@ func SoldiersMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func SoldiersMonitorInit(mcc *mc.MonitorCenter) {
-	soldiers := SoldiersHeroInit()
-	mcc.AddHeroInHeroMap(soldiers)
+func SoldiersMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//soldiers := SoldiersHeroInit()
+	//mcc.AddHeroInHeroMap(soldiers)
 	//cl := SoldiersMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

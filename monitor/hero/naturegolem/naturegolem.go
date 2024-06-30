@@ -19,7 +19,7 @@ func NatureGolemHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          10,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &NatureGolem
 }
@@ -28,9 +28,9 @@ func NatureGolemMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func NatureGolemMonitorInit(mcc *mc.MonitorCenter) {
-	nature := NatureGolemHeroInit()
-	mcc.AddHeroInHeroMap(nature)
+func NatureGolemMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//nature := NatureGolemHeroInit()
+	//mcc.AddHeroInHeroMap(nature)
 	//cl := NatureGolemMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

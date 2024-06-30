@@ -19,7 +19,7 @@ func RhinoHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Rhino
 }
@@ -28,9 +28,9 @@ func RhinoHeroInit() *hero.Hero {
 //	return
 //}
 
-func RhinoMonitorInit(mcc *mc.MonitorCenter) {
-	rhino := RhinoHeroInit()
-	mcc.AddHeroInHeroMap(rhino)
+func RhinoMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//rhino := RhinoHeroInit()
+	//mcc.AddHeroInHeroMap(rhino)
 	//cl := RhinoMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

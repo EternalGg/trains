@@ -19,7 +19,7 @@ func JuggHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Jugg
 }
@@ -28,9 +28,9 @@ func JuggMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func JuggMonitorInit(mcc *mc.MonitorCenter) {
-	jugg := JuggHeroInit()
-	mcc.AddHeroInHeroMap(jugg)
+func JuggMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//jugg := JuggHeroInit()
+	//mcc.AddHeroInHeroMap(jugg)
 	//cl := JuggMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

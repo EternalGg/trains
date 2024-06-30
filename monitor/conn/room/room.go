@@ -10,8 +10,11 @@ import (
 	"train/monitor/conn/room/notice"
 	"train/monitor/economy/shop"
 	"train/monitor/hero"
+	crazy2 "train/monitor/hero/crazy"
 	"train/monitor/hero/heros"
 	"train/monitor/monitorfile"
+	"train/monitor/routines"
+	"train/monitor/routines/attack"
 	skills2 "train/monitor/skills"
 )
 
@@ -192,6 +195,7 @@ func (r *TestingGame) GameStart() {
 	// card chose 选择结束 进入routine
 	r.GameState.GameState = "早上"
 	r.GameState.DataState = 0
+	r.LandingCrazyRobot()
 	//fmt.Println("game state" + strconv.Itoa(r.GameState))
 	// 自由模式 游戏结束根据 游戏外quit
 	for r.GameState.GameState != "结束" {
@@ -266,16 +270,8 @@ func (r *TestingGame) GameStart() {
 								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
 								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
 								// position
-								r.MonitorCenter.BattleFiled.Positions[land.Position].Hero = &r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero
-								r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero.Pos = land.Position
-								// 卡牌中的卡牌out
-								// time map
-
-								r.MonitorCenter.PutHeroInHeroMap(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
-								// monitor init
-								heros.LandingById(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero.Id, r.MonitorCenter)
-								delete(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg, land.CardId)
-								ad := notice.LandingResultMade(true, "登场成功", r.MonitorCenter.BattleFiled.Positions[land.Position].Hero, 0, land.Position)
+								// 放入英雄map以及时间map
+								ad := r.CardLanding(land)
 								r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, ad)
 
 								n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
@@ -364,24 +360,55 @@ func (r *TestingGame) GameStart() {
 								json.Unmarshal(heroTurn.Data, &gs)
 								move := Move{}
 								json.Unmarshal(gs.GameData, &move)
-								fmt.Println(move.SkillId, move.TargetId, "zzzzzzz")
+								fmt.Println(move.SkillId, "选择技能id", move.TargetId, "选择目标下标")
 								no := &notice.Notice{}
-								state, skill := r.SkillJudgeAndReduce(HT, move.TargetId, move.SkillId)
-								h, p := skill.FindTarget(move.TargetId)
-								fmt.Println(h, p)
+								var state int
+								var skill *Skill
+
+								state, skill = r.SkillJudgeAndReduce(HT, move.TargetId, move.SkillId)
+
 								if state == 0 {
-									if skill.Selectable == nil {
-										break
+									var h *hero.Hero
+									var pos int
+									if !skill.Skill.NoTarget {
+										h, pos = skill.FindTarget(move.TargetId)
 									}
+									fmt.Println(h, pos)
 									switch state {
 									case 1:
+
 									case 2:
 									case 3:
 									default:
 										switch skill.Skill.Id {
-										case 0:
+										case 1:
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+
+											attack := attack.Attack{
+												Name:     "攻击test",
+												Attacker: nowHero,
+												Targets:  h,
+												Damage:   0,
+												Mc:       r.MonitorCenter,
+											}
+											routines.Gates(attack, r.MonitorCenter)
+											no = r.LogToNotice()
+											HT = r.SkillsDynamicUpdates(nowHero)
+											r.GameState.HT = *HT
+										case 2:
+											// 移动
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+											move := r.MonitorCenter.BattleFiled.HeroMove(
+												r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
+												r.MonitorCenter.BattleFiled.Positions[pos],
+												nowHero)
+											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
+											no = r.LogToNotice()
+											HT = r.SkillsDynamicUpdates(nowHero)
+											r.GameState.HT = *HT
+										case 3:
+										case 4:
 											// 结束回合
-											fmt.Println("end!")
 											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
 
 											n := notice.TurnEndResultMade(true, 0)
@@ -390,17 +417,7 @@ func (r *TestingGame) GameStart() {
 											end = true
 											// monitor end select and publish 扫描monitor
 											// 从monitor log里 从后向上找直到第一个actionStart 然后弄成notice返回
-										case 2:
-											fmt.Println("move!")
-											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-											move := r.MonitorCenter.BattleFiled.HeroMove(
-												r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
-												r.MonitorCenter.BattleFiled.Positions[p],
-												nowHero)
-											r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
-											no = r.LogToNotice()
-											HT = r.SkillsDynamicUpdates(nowHero)
-											r.GameState.HT = *HT
+
 										}
 									}
 
@@ -558,7 +575,7 @@ func (t *TestingGame) FindSelected(skill *skills2.Skill, remainMoney int, h *her
 	result.Selectable.SelectPoint = len(selected.Unit) + len(selected.Pos)
 	// 判断技能目标是否足够，不足而且不能无目标释放 A = false
 	if selected.SelectPoint == 0 {
-		if skill.Targets[0] != 8 {
+		if !skill.NoTarget {
 			result.Available = false
 			result.NotAvailable = append(result.NotAvailable, 3)
 		}
@@ -613,12 +630,10 @@ func (r *TestingGame) SkillJudgeAndReduce(h *HeroTurn, targetId, skillId int) (i
 			break
 		}
 	}
-	if skill.Selectable.SelectPoint == 0 && skill.Available {
-		return 0, skill
-	}
 	if skill == nil {
 		return 1, nil
 	}
+
 	if !skill.Available {
 		return 2, nil
 	}
@@ -655,6 +670,7 @@ func (r *TestingGame) LogToNotice() *notice.Notice {
 }
 
 func (s *Skill) FindTarget(p int) (*hero.Hero, int) {
+
 	if s.Selectable.Unit != nil {
 
 		for i := 0; i < len(s.Selectable.Unit); i++ {
@@ -674,4 +690,43 @@ func (s *Skill) FindTarget(p int) (*hero.Hero, int) {
 		}
 	}
 	return nil, 0
+}
+
+// 卡牌登陆
+func (r TestingGame) CardLanding(land Landing) *notice.ActionData {
+	r.MonitorCenter.PutHeroInHeroMap(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
+	r.MonitorCenter.PutHeroInTimeMap(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
+	// 放入地区
+	r.MonitorCenter.BattleFiled.Positions[land.Position].Hero = &r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero
+	// 英雄的pos更改
+	r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero.Pos = land.Position
+	// 卡牌中的卡牌out
+	// time map
+
+	// monitor init
+	heros.Landing(&r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero, r.MonitorCenter)
+	// 删除卡牌map中的卡牌
+	delete(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg, land.CardId)
+	ad := notice.LandingResultMade(true, "登场成功", r.MonitorCenter.BattleFiled.Positions[land.Position].Hero, 0, land.Position)
+	r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, ad)
+	return ad
+}
+
+// 登场狂爆机器人到3和20
+func (r *TestingGame) LandingCrazyRobot() {
+	crazy1 := crazy2.CrazyHeroInit()
+	crazy1.Name = "狂战士稻草人"
+	heros.Landing(crazy1, r.MonitorCenter)
+	crazy1.Pos = 20
+	r.MonitorCenter.BattleFiled.Positions[20].Hero = crazy1
+	r.MonitorCenter.PutHeroInHeroMap(crazy1)
+	crazy1.Owner = 2
+
+	crazy2 := crazy2.CrazyHeroInit()
+	crazy2.Name = "狂战士稻草人"
+	heros.Landing(crazy2, r.MonitorCenter)
+	crazy2.Pos = 3
+	r.MonitorCenter.BattleFiled.Positions[3].Hero = crazy2
+	r.MonitorCenter.PutHeroInHeroMap(crazy2)
+	crazy2.Owner = 2
 }

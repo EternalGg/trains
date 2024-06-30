@@ -5,6 +5,7 @@ import (
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
 	"train/monitor/monitors"
+	"train/monitor/routines/attack/data"
 )
 
 type (
@@ -24,7 +25,7 @@ type (
 //  2. 如果确认攻击 则计算attack
 //     返回攻击结算session
 //  3. 攻击，攻击后的monitor
-func (a *SingleAttack) Calculator() mc.AttackCalculate {
+func (a *SingleAttack) Calculator() data.AttackCalculate {
 
 	attackerBefore := a.Mc.ListenAndFilter(
 		a.Attacker.Id,
@@ -33,7 +34,7 @@ func (a *SingleAttack) Calculator() mc.AttackCalculate {
 	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
 		monitorfile.MonitorIdMap("攻击前"))
 	// publish 后
-	attackData := mc.AttackCalculate{
+	attackData := data.AttackCalculate{
 		BaseDamage:         int(a.Attacker.AttackPoint),
 		DamageAddition:     0,
 		CriticalHitRate:    0,

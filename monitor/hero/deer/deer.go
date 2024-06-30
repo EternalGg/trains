@@ -19,7 +19,7 @@ func DeerHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          8,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Deer
 }
@@ -28,9 +28,9 @@ func DeerMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func DeerMonitorInit(mcc *mc.MonitorCenter) {
-	deer := DeerHeroInit()
-	mcc.AddHeroInHeroMap(deer)
+func DeerMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//deer := DeerHeroInit()
+	//mcc.AddHeroInHeroMap(deer)
 	//cl := DeerMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

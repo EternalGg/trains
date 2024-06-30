@@ -19,7 +19,7 @@ func OctopusHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Octopus
 }
@@ -28,9 +28,9 @@ func OctopusMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func OctopusMonitorInit(mcc *mc.MonitorCenter) {
-	octopus := OctopusHeroInit()
-	mcc.AddHeroInHeroMap(octopus)
+func OctopusMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//octopus := OctopusHeroInit()
+	//mcc.AddHeroInHeroMap(octopus)
 	//cl := OctopusMonitorLicense(cr)
 
 	mcc.MonitorsActive([]*monitors.Monitor{})

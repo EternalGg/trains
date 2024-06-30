@@ -1,41 +1,48 @@
 package crazy
 
-//func TestCrazyMonitor(t *testing.T) {
-//	mc := monitorcenter.MonitorCenterInit(0)
-//
-//	CrazyMonitorInit(mc)
-//	CrazyMonitorInit(mc)
-//	hero0 := mc.HeroMap[0]
-//	hero1 := mc.HeroMap[1]
-//	hero0.Name = "狂战士1"
-//	hero1.Name = "狂战士2"
-//	attack := attack.Attack{
-//		Name:     "攻击test",
-//		Attacker: hero0,
-//		Targets:  hero1,
-//		Damage:   0,
-//		Mc:       mc,
-//	}
-//	routines.Gates(attack, mc)
-//
-//	hero0.Intro()
-//	hero1.Intro()
-//	routines.Gates(attack, mc)
-//	//PrintMonitorLogs(mc.MonitorLogs[len(mc.MonitorLogs)-1])
-//	hero0.Intro()
-//	hero1.Intro()
-//	routines.Gates(attack, mc)
-//	hero0.Intro()
-//	hero1.Intro()
-//	for _, log := range mc.MonitorLogs {
-//		PrintMonitorLogs(log)
-//	}
-//	routines.Gates(attack, mc)
-//	routines.Gates(attack, mc)
-//	routines.Gates(attack, mc)
-//
-//	//fmt.Println(mc.MonitorLogs)
-//}
+import (
+	"testing"
+	monitorcenter "train/monitor"
+	"train/monitor/routines"
+	"train/monitor/routines/attack"
+)
+
+func TestCrazyMonitor(t *testing.T) {
+	mc := monitorcenter.MonitorCenterInit(0)
+
+	//CrazyMonitorInit(mc)
+	//CrazyMonitorInit(mc)
+	hero0 := mc.HeroMap[0]
+	hero1 := mc.HeroMap[1]
+	hero0.Name = "狂战士1"
+	hero1.Name = "狂战士2"
+	attack := attack.Attack{
+		Name:     "攻击test",
+		Attacker: hero0,
+		Targets:  hero1,
+		Damage:   0,
+		Mc:       mc,
+	}
+	routines.Gates(attack, mc)
+
+	hero0.Intro()
+	hero1.Intro()
+	routines.Gates(attack, mc)
+	//PrintMonitorLogs(mc.MonitorLogs[len(mc.MonitorLogs)-1])
+	hero0.Intro()
+	hero1.Intro()
+	routines.Gates(attack, mc)
+	hero0.Intro()
+	hero1.Intro()
+	//for _, log := range mc.MonitorLogs {
+	//	//PrintMonitorLogs(log)
+	//}
+	routines.Gates(attack, mc)
+	routines.Gates(attack, mc)
+	routines.Gates(attack, mc)
+
+	//fmt.Println(mc.MonitorLogs)
+}
 
 //func PrintMonitorLogs(logs monitorcenter.Logs) {
 //	switch logs.MainEvent.(type) {

@@ -19,7 +19,7 @@ func CrocodileHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Crocodile
 }
@@ -28,9 +28,9 @@ func CrocodileMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func CrocodileMonitorInit(mcc *mc.MonitorCenter) {
-	cr := CrocodileHeroInit()
-	mcc.AddHeroInHeroMap(cr)
+func CrocodileMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//cr := CrocodileHeroInit()
+	//mcc.AddHeroInHeroMap(cr)
 	//cl := CrocodileMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

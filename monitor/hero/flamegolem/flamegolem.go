@@ -19,7 +19,7 @@ func FlameGolemHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          10,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &FlameGolem
 }
@@ -28,9 +28,9 @@ func FlameGolemMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func FlameGolemMonitorInit(mcc *mc.MonitorCenter) {
-	flame := FlameGolemHeroInit()
-	mcc.AddHeroInHeroMap(flame)
+func FlameGolemMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
+	//flame := FlameGolemHeroInit()
+	//mcc.AddHeroInHeroMap(flame)
 	//cl := FlameGolemMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }

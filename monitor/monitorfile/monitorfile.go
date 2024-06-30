@@ -329,6 +329,8 @@ func SkillsMap(str string) int {
 		return 2
 	case "防守":
 		return 3
+	case "结束回合":
+		return 4
 	default:
 		return 0
 	}
@@ -341,6 +343,8 @@ func SkillsIntToStrMap(i int) string {
 		return "移动"
 	case 3:
 		return "防守"
+	case 4:
+		return "结束回合"
 	default:
 		return ""
 	}

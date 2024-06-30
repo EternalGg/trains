@@ -19,7 +19,7 @@ func HippoHeroInit() *hero.Hero {
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          12,
-		PositiveSkills: []int{1, 2, 3},
+		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Hippo
 }
@@ -28,9 +28,9 @@ func HippoMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 	return
 }
 
-func HippoMonitorInit(mcc *mc.MonitorCenter) {
-	hippo := HippoHeroInit()
-	mcc.AddHeroInHeroMap(hippo)
+func HippoMonitorInit(mcc *mc.MonitorCenter, hero *hero.Hero) {
+	//hippo := HippoHeroInit()
+	//mcc.AddHeroInHeroMap(hippo)
 	//cl := HippoMonitorLicense(cr)
 	mcc.MonitorsActive([]*monitors.Monitor{})
 }
