@@ -1,7 +1,6 @@
 package dead
 
 import (
-	"fmt"
 	"train/monitor/hero"
 )
 
@@ -19,8 +18,7 @@ func (d *Death) Calculator() {
 }
 
 func (d *Death) Processer() {
-	//
-	fmt.Println("dead")
+
 }
 
 func (d *Death) Later() {

@@ -96,6 +96,11 @@ type (
 		Success  bool
 		NextTurn int
 	}
+	// HeroDeadData id = 11 ActionName = DeadData
+	DeadResult struct {
+		Hero   *hero.Hero
+		Killer *hero.Hero
+	}
 )
 
 func MoveResultMade(s bool, str string, h *hero.Hero, start, landing, errcode int) *ActionData {
@@ -249,5 +254,17 @@ func ActionToNotice(adlist []ActionData, str string, id int) *Notice {
 		NoticeName: str,
 		Id:         id,
 		Actions:    adlist,
+	}
+}
+func DeadResultMade(killer, object *hero.Hero) *ActionData {
+	dr := DeadResult{
+		Hero:   object,
+		Killer: killer,
+	}
+	jdr, _ := json.Marshal(dr)
+	return &ActionData{
+		ID:         11,
+		ActionName: "单位死亡！",
+		Data:       jdr,
 	}
 }

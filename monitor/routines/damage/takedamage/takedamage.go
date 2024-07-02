@@ -1,7 +1,6 @@
 package takedamage
 
 import (
-	"fmt"
 	mc "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
@@ -67,6 +66,7 @@ func (d *TakeDamage) Processer() *TakeDamageCalculate {
 	// processer time
 	// 减少血量
 	d.Targets.THealth -= d.Damage
+	// 如果blood的monitor长度>0 publish
 	if len(blood) != 0 {
 		d.Mc.MonitorsPublish(blood)
 	}
@@ -76,7 +76,6 @@ func (d *TakeDamage) Processer() *TakeDamageCalculate {
 		Targets:  d.Targets,
 		Damage:   d.Damage,
 	}
-	fmt.Println(td, result)
 	result.TD = &td
 	return result
 }

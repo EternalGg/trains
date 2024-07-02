@@ -61,6 +61,7 @@ func (a *Attack) Processer() (ad data.AttackCalculate) {
 	}
 	// calculate time
 	ad = a.Calculator()
+
 	ad.Name = a.Name
 	// processer time
 	return

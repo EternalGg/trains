@@ -14,9 +14,9 @@ func CrazyHeroInit() *hero.Hero {
 		Health:         7,
 		THealth:        7,
 		Name:           "狂战士",
-		AttackPoint:    3,
+		AttackPoint:    1,
 		Price:          600,
-		ActionPoint:    3,
+		ActionPoint:    10,
 		GameTempo:      map[int]int{},
 		RoundTempo:     map[int]int{},
 		Speed:          10,
@@ -52,11 +52,15 @@ func CrazyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 		ListenType: monitorfile.MonitorIdMap("掉血"),
 		Subject:    monitorfile.OwnerMap("敌方单位"),
 	}
+	middleBlood := monitors.MonitorLicense{
+		ListenType: monitorfile.MonitorIdMap("掉血"),
+		Subject:    monitorfile.OwnerMap("中立单位"),
+	}
 	teamMateBlood := monitors.MonitorLicense{
 		ListenType: monitorfile.MonitorIdMap("掉血"),
 		Subject:    monitorfile.OwnerMap("己方单位不包含自己"),
 	}
-	result.ListenLicense = append(result.ListenLicense, selfBlood, enmyBlood, teamMateBlood)
+	result.ListenLicense = append(result.ListenLicense, selfBlood, enmyBlood, teamMateBlood, middleBlood)
 	return
 }
 

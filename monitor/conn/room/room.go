@@ -332,7 +332,7 @@ func (r *TestingGame) GameStart() {
 			// 技能的判断和释放 以及Notice返回
 			// 结束回合后恢复ActionPoint
 			// 所有技能，行动的monitor化
-			for i := 0; i < 13; i++ {
+			for i := 0; i <= 12; i++ {
 				//fmt.Println(r.MonitorCenter.Time.Actions)
 				for len(r.MonitorCenter.Time.Actions) != 0 {
 					// 速度排序
@@ -437,15 +437,193 @@ func (r *TestingGame) GameStart() {
 					r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
 				}
 				r.MonitorCenter.RoundPast()
-
 			}
-
+			r.GameState.GameState = "中午"
 		case "中午":
 			// 中午
+			select {
+			case LandingOrBanking := <-r.Ch:
+				// buy  buy+id
+				// shop 查询商店
+				// sale sale+id
+				// land land+id+位置
+				// map 查询地图
+				// end 结束回合
+				// pkg 查询金钱和卡包
+				gs := GameSession{}
+				json.Unmarshal(LandingOrBanking.Data, &gs)
+				switch gs.GameDatatype {
+				case 3:
+					// 地图以及登陆
+					land := Landing{}
+					json.Unmarshal(gs.GameData, &land)
+					//fmt.Println(land.Position, land.CardId)
+					if string(gs.GameData) != ("map") {
+						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
+						//	fmt.Println(i, i2)
+						//}
+						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
+							// 如果没有这个bf
+							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
+								// position
+								// 放入英雄map以及时间map
+								ad := r.CardLanding(land)
+								r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, ad)
+
+								n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
+								s, gs := ServerSession{}, GameSession{}
+								s.Type = 3
+								gs.GameDatatype = 7
+								jn, _ := json.Marshal(n)
+								gs.GameData = jn
+								jgs, _ := json.Marshal(gs)
+								s.Data = jgs
+								r.ChOut <- &s
+							}
+						}
+					}
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 3
+					m := r.MonitorCenter.BattleFiled
+					jm, _ := json.Marshal(m)
+					gs.GameData = jm
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 4:
+					//结束该回合
+					r.GameState.GameState = NextGameState(r.GameState.GameState)
+					te := notice.TurnEndResultMade(true, 0)
+					r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, te)
+					n := notice.ActionToNotice([]notice.ActionData{*te}, "结束回合", 10)
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 7
+					jn, _ := json.Marshal(n)
+					gs.GameData = jn
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 5:
+					// 查询卡牌和经济
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 5
+					pkg := PKG{
+						r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
+						r.MonitorCenter.Economy[r.Gamer.ID].Money,
+					}
+					jpkg, _ := json.Marshal(pkg)
+					gs.GameData = jpkg
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 6:
+					// banking time
+					// normal banking data
+					// 1.存钱
+					// 2.取钱
+					// 3.贷款
+					// 4.还贷
+				}
+			}
 		case "下午routine":
 			// 下午routine
+			for i := 0; i <= 12; i++ {
+
+			}
 		case "傍晚":
 			// 晚上
+			select {
+			case LandingOrBanking := <-r.Ch:
+				// buy  buy+id
+				// shop 查询商店
+				// sale sale+id
+				// land land+id+位置
+				// map 查询地图
+				// end 结束回合
+				// pkg 查询金钱和卡包
+				gs := GameSession{}
+				json.Unmarshal(LandingOrBanking.Data, &gs)
+				switch gs.GameDatatype {
+				case 3:
+					// 地图以及登陆
+					land := Landing{}
+					json.Unmarshal(gs.GameData, &land)
+					//fmt.Println(land.Position, land.CardId)
+					if string(gs.GameData) != ("map") {
+						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
+						//	fmt.Println(i, i2)
+						//}
+						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
+							// 如果没有这个bf
+							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
+								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
+								// position
+								// 放入英雄map以及时间map
+								ad := r.CardLanding(land)
+								r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, ad)
+
+								n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
+								s, gs := ServerSession{}, GameSession{}
+								s.Type = 3
+								gs.GameDatatype = 7
+								jn, _ := json.Marshal(n)
+								gs.GameData = jn
+								jgs, _ := json.Marshal(gs)
+								s.Data = jgs
+								r.ChOut <- &s
+							}
+						}
+					}
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 3
+					m := r.MonitorCenter.BattleFiled
+					jm, _ := json.Marshal(m)
+					gs.GameData = jm
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 4:
+					//结束该回合
+					r.GameState.GameState = NextGameState(r.GameState.GameState)
+					te := notice.TurnEndResultMade(true, 0)
+					r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, te)
+					n := notice.ActionToNotice([]notice.ActionData{*te}, "结束回合", 10)
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 7
+					jn, _ := json.Marshal(n)
+					gs.GameData = jn
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 5:
+					// 查询卡牌和经济
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 3
+					gs.GameDatatype = 5
+					pkg := PKG{
+						r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
+						r.MonitorCenter.Economy[r.Gamer.ID].Money,
+					}
+					jpkg, _ := json.Marshal(pkg)
+					gs.GameData = jpkg
+					jgs, _ := json.Marshal(gs)
+					s.Data = jgs
+					r.ChOut <- &s
+				case 7:
+				// wild shop  time
+				case 8:
+					//bluff time
+
+				}
+			}
 		case "夜晚routine":
 			// 晚上routine
 		}
