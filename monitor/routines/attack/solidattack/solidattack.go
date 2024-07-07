@@ -22,10 +22,10 @@ func (a *SolidAttack) Checker() {
 func (a *SolidAttack) Calculator() (result data.AttackCalculate) {
 
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id,
+		a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	a.Mc.MonitorsPublish(attackerBefore)
-	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
+	attacker := a.Mc.ListenAndFilter(a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	// publish 后
 	for _, monitor := range attacker {

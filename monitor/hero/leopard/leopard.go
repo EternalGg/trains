@@ -10,15 +10,14 @@ import (
 
 func LeopardHeroInit() *hero.Hero {
 	leopard := hero.Hero{
-		Id:             monitorfile.HeroNameToint("豹子"),
-		Health:         5,
-		THealth:        5,
-		Name:           "豹子",
-		AttackPoint:    2,
-		Price:          250,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("豹子"),
+		Health:      5,
+		THealth:     5,
+		Name:        "豹子",
+		AttackPoint: 2,
+		Price:       250,
+		ActionPoint: 1,
+
 		Speed:          8,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

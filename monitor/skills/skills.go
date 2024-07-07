@@ -39,6 +39,7 @@ func NocturnalAnimal() *monitors.Monitor {
 	// 距离为1的速度Buff
 	result.Bubble[monitorfile.BubbleIdMap("攻击力永久加成")] = 1
 	result.Bubble[monitorfile.BubbleIdMap("速度")] = -2
+	result.Bubble[monitorfile.BubbleIdMap("体力")] = 1
 	return result
 }
 
@@ -56,6 +57,26 @@ func Spirit1() *monitors.Monitor {
 	}
 	// 距离为1的速度Buff
 	result.Bubble[monitorfile.BubbleIdMap("行动点数")] = 1
+	return result
+}
+
+// 巨型食草动物
+func GiantHerbivore() *monitors.Monitor {
+	// 掉血，回合结束 monitor check
+	result := &monitors.Monitor{
+		Name:          "巨型食草动物",
+		MID:           monitorfile.MonitorIdMap("巨型食草动物"),
+		Tid:           0,
+		Froze:         false,
+		Logs:          []string{},
+		Bubble:        map[int]int{},
+		IsForever:     false,
+		RelianceOwner: true,
+	}
+
+	result.Bubble[monitorfile.BubbleIdMap("体力")] = 1
+	result.Bubble[monitorfile.BubbleIdMap("速度")] = -2
+	result.Bubble[monitorfile.BubbleIdMap("攻击力永久加成")] = 2
 	return result
 }
 
@@ -84,6 +105,8 @@ func StrToSkills(str string) *Skill {
 		return Defence()
 	case "结束回合":
 		return EndHeroTurn()
+	case "野蛮冲撞":
+		return CrushMove()
 	default:
 		return nil
 	}
@@ -97,7 +120,7 @@ func Attack() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
-		Targets:   []int{1, 2},
+		Targets:   []int{0, 1, 2},
 		NoTarget:  false,
 	}
 	att.Id = monitorfile.SkillsMap(att.Name)
@@ -142,6 +165,20 @@ func EndHeroTurn() *Skill {
 		Money:     0,
 		Distance:  0,
 		NoTarget:  true,
+	}
+	return end
+}
+
+// 大象移动技能：行动后向距离为1的英雄单位造成1点伤害
+func CrushMove() *Skill {
+	end := &Skill{
+		Id:        5,
+		Name:      "巨兽踩踏",
+		MovePoint: 1,
+		Money:     0,
+		Distance:  1,
+		NoTarget:  false,
+		Targets:   []int{4},
 	}
 	return end
 }

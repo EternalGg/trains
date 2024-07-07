@@ -10,15 +10,14 @@ import (
 
 func ZebraHeroInit() *hero.Hero {
 	Zebra := hero.Hero{
-		Id:             monitorfile.HeroNameToint("斑马"),
-		Health:         5,
-		THealth:        5,
-		Name:           "斑马",
-		AttackPoint:    1,
-		Price:          250,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("斑马"),
+		Health:      5,
+		THealth:     5,
+		Name:        "斑马",
+		AttackPoint: 1,
+		Price:       250,
+		ActionPoint: 1,
+
 		Speed:          8,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

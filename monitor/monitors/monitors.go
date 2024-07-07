@@ -8,15 +8,18 @@ type (
 	Monitor struct {
 		Name  string
 		Owner *hero.Hero // hero
-		MID   int        // monitor id 根据id鉴别monitor
-		Tid   int        // 临时id
-		Froze bool       // 是否暂停中,暂停使用
-		Logs  []string   // 发生了什么
+		From  *hero.Hero // 谁放的技能
+
+		MID   int      // monitor id 根据id鉴别monitor
+		Tid   int      // 临时id
+		Froze bool     // 是否暂停中,暂停使用
+		Logs  []string // 发生了什么
 
 		IsForever     bool // 是否是永久
 		LifeTimeState int  // 持续时间扣减方式 0次数 1游戏时间 2单位回合
 		LifeTime      int  // 持续时间
-		RelianceOwner bool //是否依赖于owner是否死亡
+		RelianceOwner bool // 是否依赖于owner是否死亡
+		RelianceFrom  bool // 是否依赖于释放者是否死亡
 
 		// publishstate monitor，buff后续加成 foreverstate 直接buff加成 bubble 非加成到单位属性类加成
 		PublishState  map[int]int        // 激活加成（被动加成)

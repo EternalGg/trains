@@ -9,15 +9,14 @@ import (
 
 func NatureGolemHeroInit() *hero.Hero {
 	NatureGolem := hero.Hero{
-		Id:             monitorfile.HeroNameToint("自然魔像"),
-		Health:         7,
-		THealth:        7,
-		Name:           "自然魔像",
-		AttackPoint:    3,
-		Price:          450,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("自然魔像"),
+		Health:      7,
+		THealth:     7,
+		Name:        "自然魔像",
+		AttackPoint: 3,
+		Price:       450,
+		ActionPoint: 1,
+
 		Speed:          10,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

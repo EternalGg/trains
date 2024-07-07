@@ -56,58 +56,10 @@ func MonitorIdMap(str string) int {
 		return 25
 	case "体力一":
 		return 26
+	case "巨型食草动物":
+		return 27
 	default:
 		return 0
-	}
-}
-
-// MonitorStrMap monitor to str map
-func MonitorStrMap(str int) string {
-
-	switch str {
-	case 1:
-		return "狂战士之血"
-
-	case 2:
-		return "死亡"
-	case 3:
-		return "放逐"
-	case 4:
-		return "沉默"
-
-	case 5:
-		return "攻击前"
-	case 6:
-		return "被攻击"
-	case 7:
-		return "被攻击后"
-	case 18:
-		return "攻击后"
-	case 8:
-		return "掉血"
-	case 9:
-		return "恢复生命值"
-	case 10:
-		return "移动"
-	case 11:
-		return "静止"
-	case 12:
-		return "结束回合"
-	case 13:
-		return "闪避"
-	case 14:
-		return "被debuff"
-	case 15:
-		return "释放debuff"
-	case 16:
-		return "被buff"
-	case 17:
-		return "释放buff"
-
-	case 19:
-		return "造成伤害"
-	default:
-		return ""
 	}
 }
 
@@ -146,8 +98,6 @@ func BubbleIdMap(str string) int {
 		return 15
 	case "速度":
 		return 16
-	case "行动点数":
-		return 17
 	default:
 		return 0
 	}
@@ -345,6 +295,8 @@ func SkillsIntToStrMap(i int) string {
 		return "防守"
 	case 4:
 		return "结束回合"
+	case 5:
+		return "野蛮冲撞"
 	default:
 		return ""
 	}

@@ -9,15 +9,14 @@ import (
 
 func CrocodileHeroInit() *hero.Hero {
 	Crocodile := hero.Hero{
-		Id:             monitorfile.HeroNameToint("鳄鱼"),
-		Health:         0,
-		THealth:        0,
-		Name:           "鳄鱼",
-		AttackPoint:    0,
-		Price:          350,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("鳄鱼"),
+		Health:      0,
+		THealth:     0,
+		Name:        "鳄鱼",
+		AttackPoint: 0,
+		Price:       350,
+		ActionPoint: 1,
+
 		Speed:          12,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

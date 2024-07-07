@@ -50,7 +50,7 @@ func (B *BeAttack) Checker() (result []int) {
 // Calculator 计算闪避率,伤害减免,伤害减免百分比
 func (B *BeAttack) Calculator() (result BeAttackCalculate, beAttack []*monitors.Monitor) {
 	beAttack = B.Mc.ListenAndFilter(
-		B.Attacker.Id,
+		B.Attacker.Tid,
 		monitorfile.MonitorIdMap("被攻击"))
 	for _, monitor := range beAttack {
 		for key, value := range monitor.Bubble {
@@ -91,7 +91,7 @@ func (B *BeAttack) Processer() (BA BeAttackCalculate) {
 	if mc.RandomByTime(beAttackData.DogeRate) {
 		// 如果闪避，则返回闪避以及publish闪避
 		BA.IsDoge = true
-		doge := B.Mc.ListenAndFilter(B.Targets.Id,
+		doge := B.Mc.ListenAndFilter(B.Targets.Tid,
 			monitorfile.MonitorIdMap("闪避"))
 		B.Mc.MonitorsPublish(doge)
 	} else {

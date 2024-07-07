@@ -28,10 +28,10 @@ type (
 func (a *SingleAttack) Calculator() data.AttackCalculate {
 
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id,
+		a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	a.Mc.MonitorsPublish(attackerBefore)
-	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
+	attacker := a.Mc.ListenAndFilter(a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	// publish 后
 	attackData := data.AttackCalculate{
@@ -75,7 +75,7 @@ func (a *SingleAttack) Checker() (result mc.SessionsAttack) {
 	result.PreAttackMonitor.Changes = []monitors.MonitorSummary{}
 	result.BeforeAttackMonitor.Changes = []monitors.MonitorSummary{}
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id, monitorfile.MonitorIdMap("攻击前"))
+		a.Attacker.Tid, monitorfile.MonitorIdMap("攻击前"))
 	for _, monitor := range attackerBefore {
 		c := monitors.MonitorSummary{
 			Name:    monitor.MID,
@@ -84,7 +84,7 @@ func (a *SingleAttack) Checker() (result mc.SessionsAttack) {
 		result.PreAttackMonitor.Changes = append(result.PreAttackMonitor.Changes, c)
 	}
 	enemyBeAttack := a.Mc.ListenAndFilter(
-		a.Targets.Id, monitorfile.MonitorIdMap("被攻击"))
+		a.Targets.Tid, monitorfile.MonitorIdMap("被攻击"))
 	for _, monitor := range enemyBeAttack {
 		c := monitors.MonitorSummary{
 			Name:    monitor.MID,

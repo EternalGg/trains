@@ -17,8 +17,6 @@ func LionHeroInit() *hero.Hero {
 		Price:       250,
 		ActionPoint: 1,
 
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
 		Speed:          8,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
