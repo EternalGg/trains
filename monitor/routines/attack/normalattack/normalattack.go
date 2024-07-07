@@ -1,6 +1,7 @@
 package normalattack
 
 import (
+	"fmt"
 	mc "train/monitor"
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
@@ -26,13 +27,12 @@ type (
 //     返回攻击结算session
 //  3. 攻击，攻击后的monitor
 func (a *SingleAttack) Calculator() data.AttackCalculate {
-
+	fmt.Println(a.Targets.Name)
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id,
+		a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	a.Mc.MonitorsPublish(attackerBefore)
-	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
-		monitorfile.MonitorIdMap("攻击前"))
+	attacker := a.Mc.HeroMonitorMap[a.Attacker]
 	// publish 后
 	attackData := data.AttackCalculate{
 		BaseDamage:         int(a.Attacker.AttackPoint),
@@ -41,7 +41,8 @@ func (a *SingleAttack) Calculator() data.AttackCalculate {
 		CriticalStrikeRate: 0,
 		OtherDamage:        0,
 	}
-	for _, monitor := range attacker {
+
+	for monitor, _ := range attacker {
 		for key, value := range monitor.Bubble {
 			switch key {
 			case monitorfile.BubbleIdMap("暴击率"):
@@ -62,11 +63,13 @@ func (a *SingleAttack) Calculator() data.AttackCalculate {
 	if !mc.RandomByTime(attackData.CriticalHitRate) {
 		attackData.IsCritical = false
 		attackData.FinalDamage = attackData.BaseDamage + attackData.OtherDamage + attackData.DamageAddition
+		fmt.Println(attackData.FinalDamage, attackData.DamageAddition)
 	} else {
 		attackData.IsCritical = true
 		attackData.FinalDamage = (attackData.BaseDamage + attackData.DamageAddition) +
 			((attackData.BaseDamage+attackData.DamageAddition)*attackData.CriticalStrikeRate)/100 +
 			attackData.OtherDamage
+		fmt.Println(attackData.FinalDamage, attackData.DamageAddition)
 	}
 	return attackData
 }
@@ -75,7 +78,7 @@ func (a *SingleAttack) Checker() (result mc.SessionsAttack) {
 	result.PreAttackMonitor.Changes = []monitors.MonitorSummary{}
 	result.BeforeAttackMonitor.Changes = []monitors.MonitorSummary{}
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id, monitorfile.MonitorIdMap("攻击前"))
+		a.Attacker.Tid, monitorfile.MonitorIdMap("攻击前"))
 	for _, monitor := range attackerBefore {
 		c := monitors.MonitorSummary{
 			Name:    monitor.MID,
@@ -84,7 +87,7 @@ func (a *SingleAttack) Checker() (result mc.SessionsAttack) {
 		result.PreAttackMonitor.Changes = append(result.PreAttackMonitor.Changes, c)
 	}
 	enemyBeAttack := a.Mc.ListenAndFilter(
-		a.Targets.Id, monitorfile.MonitorIdMap("被攻击"))
+		a.Targets.Tid, monitorfile.MonitorIdMap("被攻击"))
 	for _, monitor := range enemyBeAttack {
 		c := monitors.MonitorSummary{
 			Name:    monitor.MID,

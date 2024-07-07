@@ -1,18 +1,19 @@
 package chanel
 
 import (
+	"fmt"
 	"testing"
-	"time"
 )
 
 func TestTestRotine(t *testing.T) {
-	chan1 := make(chan int, 10)
-	go TestRotine(chan1)
-	for i := 0; i < 10; i++ {
+	s := 10
+	ap, bp := &s, &s
+	fmt.Println(ap, bp)
+	m := map[*int]int{}
+	m[ap] = 1
+	m[ap] = 2
+	fmt.Println(len(m))
+	ap = nil
 
-		chan1 <- i
-		chan1 <- i * 10
-		time.Sleep(1 * time.Second)
-
-	}
+	fmt.Println(ap, bp)
 }

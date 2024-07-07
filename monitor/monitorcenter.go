@@ -1,6 +1,7 @@
 package monitorcenter
 
 import (
+	"fmt"
 	"math/rand"
 	"sort"
 	"time"
@@ -15,14 +16,17 @@ import (
 
 type (
 	MonitorCenter struct {
-		GID          int                       //游戏房间Id
-		HeroMap      map[int]*hero.Hero        //根据hero id 查找英雄
-		MonitorMap   map[int]*monitors.Monitor //根据monitor id索引monitor
-		MonitorCount map[int]int               //monitor类别的记录
-		MonitorLogs  []*notice.ActionData      //记录monitor 所有发生的事情
-		BattleFiled  *battlefiled.BattleFiled
-		Time         MonitorTime
-		Economy      map[int]*economy.Economy // map[userid]*economy
+		GID         int                  //游戏房间Id
+		HeroMap     map[int]*hero.Hero   //根据hero id 查找英雄
+		MonitorLogs []*notice.ActionData //记录monitor 所有发生的事情
+		BattleFiled *battlefiled.BattleFiled
+		Time        MonitorTime
+		Economy     map[int]*economy.Economy // map[userid]*economy
+
+		MonitorCount    map[int]int //monitor类别的记录
+		MonitorCountMap map[*monitors.Monitor]bool
+		HeroMonitorMap  map[*hero.Hero]map[*monitors.Monitor]bool
+		MonitorMap      map[int]*monitors.Monitor //根据monitor id索引monitor
 	}
 
 	Worker interface {
@@ -33,9 +37,11 @@ type (
 	MonitorTime struct {
 		Time           *Time                      //时间类
 		TimeChange     map[*monitors.Monitor]uint //倒计时类
-		DayChange      map[*monitors.Monitor]uint //天数
-		NQuantumChange map[*monitors.Monitor]uint //早上0 下午1 晚上2
+		DayChange      map[*monitors.Monitor]uint //天数 未用到
+		NQuantumChange map[*monitors.Monitor]uint //早上0 下午1 晚上2 //未用到
 		NightChange    map[*monitors.Monitor]bool //白天黑夜 白天True 黑夜False
+		HeroTurnEnd    map[*monitors.Monitor]bool //英雄回合结束类
+		HeroTurnStart  map[*monitors.Monitor]bool //英雄回合结束类
 		Actions        []*Action                  //行动
 	}
 )
@@ -77,7 +83,7 @@ type (
 func TimeInit() *Time {
 	return &Time{
 		Day:         0,
-		Round:       0,
+		Round:       1,
 		TimeQuantum: 0,
 		HeroTime:    map[*hero.Hero]int{},
 		IsNight:     true,
@@ -109,34 +115,34 @@ func (t *MonitorCenter) RoundPast() {
 	t.TimeListener(0)
 	// 英雄速度归位
 	for _, h := range heroList {
-		t.Time.Time.HeroTime[h] = (h.Speed)
+		t.Time.Time.HeroTime[h] = h.Speed
+		fmt.Println(h.Name, h.Speed)
 	}
 	// time past
 	t.Time.Time.Round++
-	if t.Time.Time.Round%12 == 0 {
+	if t.Time.Time.Round%13 == 0 {
 		t.TimeQuantumPast()
 	}
 }
 func (t *MonitorCenter) TimeQuantumPast() {
 	switch t.Time.Time.Round {
-	case 24:
+	case 26:
 		//夜晚开始
-		t.Time.Time.IsNight = false
+		t.Time.Time.IsNight = true
 		t.Time.Time.TimeQuantum++
-	case 12:
+		t.DayPast()
+	case 13:
 		//中午开始
 		t.Time.Time.TimeQuantum++
-	case 48:
-		t.DayPast()
-		t.Time.Time.IsNight = true
+	case 52:
+
+		t.Time.Time.IsNight = false
 		//早晨开始
 		t.Time.Time.TimeQuantum = 0
+		t.NightPast()
 	}
-	t.TimeListener(2)
 }
 func (t *MonitorCenter) DayPast() {
-	t.Time.Time.Day++
-	t.Time.Time.Round = 0
 	t.TimeListener(2)
 }
 func (t *MonitorCenter) NightPast() {
@@ -156,12 +162,14 @@ func (t *MonitorCenter) PutHeroInTimeMap(hero *hero.Hero) {
 // Init MonitorCenter Start
 func MonitorCenterInit(gid int) *MonitorCenter {
 	result := &MonitorCenter{
-		GID:          gid,
-		HeroMap:      map[int]*hero.Hero{},
-		MonitorMap:   map[int]*monitors.Monitor{},
-		MonitorLogs:  make([]*notice.ActionData, 0),
-		MonitorCount: map[int]int{},
-		Economy:      map[int]*economy.Economy{},
+		GID:             gid,
+		HeroMap:         map[int]*hero.Hero{},
+		MonitorMap:      map[int]*monitors.Monitor{},
+		MonitorLogs:     make([]*notice.ActionData, 0),
+		HeroMonitorMap:  map[*hero.Hero]map[*monitors.Monitor]bool{},
+		MonitorCountMap: map[*monitors.Monitor]bool{},
+		MonitorCount:    map[int]int{},
+		Economy:         map[int]*economy.Economy{},
 	}
 	result.Time = MonitorTime{
 		Time:           TimeInit(),
@@ -169,6 +177,8 @@ func MonitorCenterInit(gid int) *MonitorCenter {
 		DayChange:      map[*monitors.Monitor]uint{},
 		NQuantumChange: map[*monitors.Monitor]uint{},
 		NightChange:    map[*monitors.Monitor]bool{},
+		HeroTurnEnd:    map[*monitors.Monitor]bool{},
+		HeroTurnStart:  map[*monitors.Monitor]bool{},
 	}
 	result.BattleFiled = battlefiled.NormalGame()
 
@@ -177,23 +187,44 @@ func MonitorCenterInit(gid int) *MonitorCenter {
 }
 
 // monitor的增加和删除
+func (mc *MonitorCenter) MonitorCountChange(key, value int) {
+	mc.MonitorCount[key] += value
+	for monitor, _ := range mc.MonitorCountMap {
+		mc.MonitorPublish(monitor)
+	}
+}
 func (mc *MonitorCenter) AddMonitor(monitor *monitors.Monitor) {
 	// 将monitor增加到mc中
 	for i := 0; i < len(mc.MonitorMap)+1; i++ {
 		if mc.MonitorMap[int(i)] == nil {
+			// monitor map
 			mc.MonitorMap[int(i)] = monitor
-			mc.MonitorCount[monitor.MID]++
+			// count map
+			mc.MonitorCountChange(monitor.MID, 1)
+			// hero monitor map
+			if mc.HeroMonitorMap[monitor.Owner] == nil {
+				mc.HeroMonitorMap[monitor.Owner] = map[*monitors.Monitor]bool{}
+			}
+			mc.HeroMonitorMap[monitor.Owner][monitor] = true
 			monitor.Tid = (i)
+			// monitor time listen
 			switch monitor.MID {
 			case monitorfile.MonitorIdMap("夜行动物"):
 				//  转换
 				mc.TimeListenSign(monitor)
+			case monitorfile.MonitorIdMap("巨型食草动物"):
+				mc.TimeListenSign(monitor)
+			case monitorfile.MonitorIdMap("野兽之王"):
+				monitor.Bubble[monitorfile.BubbleIdMap("攻击加成")] =
+					mc.MonitorCount[monitorfile.MonitorIdMap("巨型食草动物")] +
+						mc.MonitorCount[monitorfile.MonitorIdMap("野兽")]
+				mc.MonitorCountMap[monitor] = true
 			default:
 				attr := attribute.Attribute{
 					Hero:    monitor.Owner,
 					AttrMap: monitor.Bubble,
 				}
-				attr.Positive()
+				attr.Publish()
 			}
 			break
 		}
@@ -204,7 +235,7 @@ func (mc *MonitorCenter) DeleteMonitor(m *monitors.Monitor) {
 	for id, monitor := range mc.MonitorMap {
 		if monitor.Owner.Tid == m.Owner.Id && monitor.RelianceOwner {
 			mc.MonitorMap[id] = nil
-			mc.MonitorCount[monitor.MID]--
+			mc.MonitorCountChange(monitor.MID, -1)
 		}
 	}
 }
@@ -219,9 +250,14 @@ func (mc *MonitorCenter) AddHeroInHeroMap(hero *hero.Hero) {
 	hero.Tid = len(mc.HeroMap)
 	mc.HeroMap[hero.Tid] = hero
 }
+
+// listen
 func (mc *MonitorCenter) ListenAndFilter(heroId, listenType int) (result []*monitors.Monitor) {
 	for _, monitor := range mc.MonitorMap {
 		// ListenLicense
+		if monitor == nil {
+			continue
+		}
 		for _, license := range monitor.ListenLicense {
 			if license.ListenType == listenType {
 				if license.Subject == monitorfile.OwnerMap("自己") && heroId == monitor.Owner.Tid {
@@ -232,7 +268,7 @@ func (mc *MonitorCenter) ListenAndFilter(heroId, listenType int) (result []*moni
 					// 监听队友的监听者
 					result = append(result, monitor)
 				}
-				if license.Subject == monitorfile.OwnerMap("敌方单位") && mc.HeroMap[heroId].Owner != monitor.Owner.Owner && mc.HeroMap[heroId].Owner != 2 {
+				if license.Subject == monitorfile.OwnerMap("敌方单位") && mc.HeroMap[heroId].Owner != monitor.Owner.Owner {
 					// 监听对手的监听者
 					result = append(result, monitor)
 				}
@@ -248,13 +284,33 @@ func (mc *MonitorCenter) ListenAndFilter(heroId, listenType int) (result []*moni
 func (mc *MonitorCenter) MonitorPublish(m *monitors.Monitor) {
 
 	switch m.MID {
+	case monitorfile.MonitorIdMap("巨型食草动物"):
+		if m.LifeTime == 0 {
+			m.LifeTime = 1
+			m.LifeTimeState = 2
+			attr := attribute.Attribute{
+				Hero:    m.Owner,
+				AttrMap: m.Bubble,
+			}
+			attr.Publish()
+			mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
+		}
+	case monitorfile.MonitorIdMap("野兽之王"):
+		m.Bubble[monitorfile.BubbleIdMap("攻击加成")] =
+			mc.MonitorCount[monitorfile.MonitorIdMap("巨型食草动物")] +
+				mc.MonitorCount[monitorfile.MonitorIdMap("野兽")]
+		fmt.Println(m.Bubble[monitorfile.BubbleIdMap("攻击加成")])
 	default:
 		// 默认增加属性
 		attr := attribute.Attribute{
 			Hero:    m.Owner,
 			AttrMap: m.PublishState,
 		}
-		attr.Positive()
+		// 增加到bubble中
+		for key, value := range m.PublishState {
+			m.Bubble[key] += value
+		}
+		attr.Publish()
 		// mc log data
 		mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
 	}
@@ -279,8 +335,48 @@ func (mc *MonitorCenter) MonitorsActive(ms []*monitors.Monitor) {
 	}
 
 }
-func (mc *MonitorCenter) MonitorsDead(ms []*monitors.Monitor) {
+func (mc *MonitorCenter) MonitorsDead(m *monitors.Monitor) {
+	switch m.MID {
+	default:
 
+	}
+	// monitor map == nil
+	delete(mc.MonitorMap, m.Tid)
+	// monitor count change
+	mc.MonitorCountChange(m.MID, -1)
+	// monitorCountMap
+	delete(mc.MonitorCountMap, m)
+	//
+	//mc.Time.monitor delete
+	switch m.LifeTimeState {
+	case 2:
+		delete(mc.Time.TimeChange, m)
+	case 3:
+		delete(mc.Time.HeroTurnEnd, m)
+	case 4:
+		delete(mc.Time.HeroTurnStart, m)
+	case 5:
+		delete(mc.Time.NightChange, m)
+	case 6:
+		delete(mc.Time.NightChange, m)
+	case 7:
+		delete(mc.Time.DayChange, m)
+	}
+}
+func (mc *MonitorCenter) HeroAllMonitorDelete(h *hero.Hero) {
+	for _, monitor := range mc.MonitorMap {
+		if monitor == nil {
+			continue
+		}
+		if monitor.Owner == h && monitor.RelianceOwner {
+			mc.MonitorsDead(monitor)
+			continue
+		}
+		if monitor.From == h && monitor.RelianceFrom {
+			mc.MonitorsDead(monitor)
+			continue
+		}
+	}
 }
 
 // monitor in time
@@ -290,6 +386,8 @@ func (mc *MonitorCenter) TimeListenSign(m *monitors.Monitor) {
 	switch m.MID {
 	case monitorfile.MonitorIdMap("夜行动物"):
 		mc.Time.NightChange[m] = false
+	case monitorfile.MonitorIdMap("巨型食草动物"):
+		mc.Time.HeroTurnEnd[m] = true
 	}
 }
 func (mc *MonitorCenter) TimeListener(t uint) {
@@ -299,7 +397,27 @@ func (mc *MonitorCenter) TimeListener(t uint) {
 
 	case 2:
 		// 度过时间区间
-
+		for monitor, u := range mc.Time.NightChange {
+			switch monitor.MID {
+			case monitorfile.MonitorIdMap("夜行动物"):
+				attr := attribute.Attribute{
+					Hero:    monitor.Owner,
+					AttrMap: monitor.Bubble,
+				}
+				if u == mc.Time.Time.IsNight {
+					attr.ToNegative()
+					attr.Publish()
+					b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
+					//fmt.Println("夜行动物,end!")
+					mc.MonitorLogs = append(mc.MonitorLogs, b)
+				} else {
+					attr.Publish()
+					b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
+					//fmt.Println("夜行动物,start!")
+					mc.MonitorLogs = append(mc.MonitorLogs, b)
+				}
+			}
+		}
 	case 3:
 		// 白天true 黑天false
 		for monitor, u := range mc.Time.NightChange {
@@ -310,9 +428,16 @@ func (mc *MonitorCenter) TimeListener(t uint) {
 					AttrMap: monitor.Bubble,
 				}
 				if u == mc.Time.Time.IsNight {
-					attr.Positive()
+					// 白天
+					attr.ToNegative()
+					attr.Publish()
+					b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
+
+					mc.MonitorLogs = append(mc.MonitorLogs, b)
 				} else {
-					attr.Negative()
+					attr.Publish()
+					b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
+					mc.MonitorLogs = append(mc.MonitorLogs, b)
 				}
 			}
 		}
@@ -320,6 +445,32 @@ func (mc *MonitorCenter) TimeListener(t uint) {
 		for monitor, _ := range mc.Time.TimeChange {
 			switch monitor.MID {
 
+			}
+		}
+	}
+}
+func (mc *MonitorCenter) TurnEndListen(h *hero.Hero) {
+	for monitor, _ := range mc.Time.HeroTurnEnd {
+		if monitor.Owner == h {
+			switch monitor.MID {
+			case monitorfile.MonitorIdMap("巨型食草动物"):
+				if monitor.LifeTime == 1 {
+					attr := attribute.Attribute{
+						Hero:    monitor.Owner,
+						AttrMap: monitor.Bubble,
+					}
+					attr.ToNegative()
+					attr.Publish()
+					if attr.AttrMap[monitorfile.BubbleIdMap("速度")] != 0 {
+						if mc.Time.Time.HeroTime[monitor.Owner]+attr.AttrMap[monitorfile.BubbleIdMap("速度")] <= 0 {
+							mc.Time.Time.HeroTime[monitor.Owner] = 0
+						} else {
+							mc.Time.Time.HeroTime[monitor.Owner] += attr.AttrMap[monitorfile.BubbleIdMap("速度")]
+						}
+					}
+					monitor.LifeTime = 0
+					mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade("巨型食草动物结束!", h, true, attr.AttrMap))
+				}
 			}
 		}
 	}
@@ -348,4 +499,13 @@ func RandomByTime(p int) bool {
 	} else {
 		return false
 	}
+}
+
+func RandomNumber(max int) int {
+	rand.Seed(time.Now().UnixNano())
+
+	// 生成一个随机整
+	// 生成一个0到100之间的随机整数
+	randomNum := rand.Intn(max)
+	return randomNum
 }

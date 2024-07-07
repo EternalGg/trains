@@ -5,6 +5,7 @@ import (
 	"train/monitor/hero"
 	"train/monitor/monitorfile"
 	"train/monitor/monitors"
+	"train/monitor/skills"
 )
 
 func LionHeroInit() *hero.Hero {
@@ -14,24 +15,33 @@ func LionHeroInit() *hero.Hero {
 		THealth:     5,
 		Name:        "狮子",
 		AttackPoint: 2,
-		Price:       250,
-		ActionPoint: 1,
+		Price:       450,
+		ActionPoint: 10,
 
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
 		Speed:          8,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Lion
 }
 
-func LionMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
-	return
+func Beast(h *hero.Hero) *monitors.Monitor {
+	B := skills.Beast()
+	B.Owner = h
+	return B
 }
-
+func BeastKing(h *hero.Hero) *monitors.Monitor {
+	B := skills.BeastKing()
+	B.Owner = h
+	return B
+}
+func NocturnalAnimal(h *hero.Hero) *monitors.Monitor {
+	NA := skills.NocturnalAnimal()
+	NA.Owner = h
+	return NA
+}
 func LionMonitorInit(mcc *mc.MonitorCenter, h *hero.Hero) {
-	//lion := LionHeroInit()
-	//mcc.AddHeroInHeroMap(lion)
-	//cl := LionMonitorLicense(cr)
-	mcc.MonitorsActive([]*monitors.Monitor{})
+	Beast := Beast(h)
+	NA := NocturnalAnimal(h)
+	BeastKing := BeastKing(h)
+	mcc.MonitorsActive([]*monitors.Monitor{Beast, NA, BeastKing})
 }

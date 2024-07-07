@@ -2,7 +2,6 @@ package routines
 
 import (
 	"encoding/json"
-	"fmt"
 	monitorcenter "train/monitor"
 	"train/monitor/conn/room/notice"
 	"train/monitor/hero/attribute"
@@ -98,7 +97,6 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		//1.死亡monitor
 
 		d := types.(dead.Death)
-		fmt.Println(d.Object, "死亡！！！！！！")
 		deathMonitor := log.ListenAndFilter(d.Object.Tid,
 			monitorfile.MonitorIdMap("死亡"))
 		if len(deathMonitor) > 0 {
@@ -109,18 +107,18 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		dr := notice.DeadResultMade(d.Killer, d.Object)
 		log.MonitorLogs = append(log.MonitorLogs, dr)
 
-		//3.单位死亡 pointer end
-		for _, monitor := range deathMonitor {
-			if monitor.RelianceOwner {
-				log.MonitorMap[monitor.Tid] = nil
-			}
-		}
+		//3.单位死亡 monitor pointer end
+		log.HeroAllMonitorDelete(d.Object)
+		// 4.单位死亡 time map end
+		delete(log.Time.Time.HeroTime, d.Object)
+		// 5. hero monitor map delete
+		delete(log.HeroMonitorMap, d.Object)
+		// 位置
 		log.BattleFiled.Positions[d.Object.Pos].Hero = nil
 		delete(log.HeroMap, d.Object.Tid)
-
 	case attribute.Attribute:
 		attr := types.(attribute.Attribute)
-		attr.Positive()
+		attr.Publish()
 	}
 }
 

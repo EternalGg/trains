@@ -9,15 +9,14 @@ import (
 
 func JuggHeroInit() *hero.Hero {
 	Jugg := hero.Hero{
-		Id:             monitorfile.HeroNameToint("主宰"),
-		Health:         16,
-		THealth:        16,
-		Name:           "主宰",
-		AttackPoint:    6,
-		Price:          800,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("主宰"),
+		Health:      16,
+		THealth:     16,
+		Name:        "主宰",
+		AttackPoint: 6,
+		Price:       800,
+		ActionPoint: 1,
+
 		Speed:          12,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

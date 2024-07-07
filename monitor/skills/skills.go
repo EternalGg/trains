@@ -39,6 +39,7 @@ func NocturnalAnimal() *monitors.Monitor {
 	// 距离为1的速度Buff
 	result.Bubble[monitorfile.BubbleIdMap("攻击力永久加成")] = 1
 	result.Bubble[monitorfile.BubbleIdMap("速度")] = -2
+	//result.Bubble[monitorfile.BubbleIdMap("体力")] = 1
 	return result
 }
 
@@ -56,6 +57,66 @@ func Spirit1() *monitors.Monitor {
 	}
 	// 距离为1的速度Buff
 	result.Bubble[monitorfile.BubbleIdMap("行动点数")] = 1
+	return result
+}
+
+// 巨型食草动物 当收到伤害时 攻击力+2 速度-2 体力+1
+func GiantHerbivore() *monitors.Monitor {
+	// 掉血，回合结束 monitor check
+	result := &monitors.Monitor{
+		Name:          "巨型食草动物",
+		MID:           monitorfile.MonitorIdMap("巨型食草动物"),
+		Tid:           0,
+		Froze:         false,
+		Logs:          []string{},
+		Bubble:        map[int]int{},
+		IsForever:     false,
+		RelianceOwner: true,
+	}
+	selfBlood := monitors.MonitorLicense{
+		ListenType: monitorfile.MonitorIdMap("掉血"),
+		Subject:    monitorfile.OwnerMap("自己"),
+	}
+	result.ListenLicense = append(result.ListenLicense, selfBlood)
+	result.Bubble[monitorfile.BubbleIdMap("体力")] = 1
+	result.Bubble[monitorfile.BubbleIdMap("速度")] = -2
+	result.Bubble[monitorfile.BubbleIdMap("攻击力永久加成")] = 2
+	return result
+}
+
+// 铜墙铁壁 伤害减免+1
+func HardSkin() *monitors.Monitor {
+	result := &monitors.Monitor{
+		Name:          "铜墙铁壁",
+		MID:           monitorfile.MonitorIdMap("铜墙铁壁"),
+		Tid:           0,
+		Froze:         false,
+		Logs:          []string{},
+		Bubble:        map[int]int{},
+		IsForever:     true,
+		RelianceOwner: true,
+	}
+	selfAttack := monitors.MonitorLicense{
+		ListenType: monitorfile.MonitorIdMap("被攻击"),
+		Subject:    monitorfile.OwnerMap("自己"),
+	}
+	result.ListenLicense = append(result.ListenLicense, selfAttack)
+	result.Bubble[monitorfile.BubbleIdMap("伤害减免")] = 1
+	return result
+}
+
+// 每当有一个野兽/巨型食草动物在场 攻击力+1
+func BeastKing() *monitors.Monitor {
+	result := &monitors.Monitor{
+		Name:          "野兽之王",
+		MID:           monitorfile.MonitorIdMap("野兽之王"),
+		Tid:           0,
+		Froze:         false,
+		Logs:          []string{},
+		Bubble:        map[int]int{},
+		IsForever:     true,
+		RelianceOwner: true,
+	}
 	return result
 }
 
@@ -84,6 +145,12 @@ func StrToSkills(str string) *Skill {
 		return Defence()
 	case "结束回合":
 		return EndHeroTurn()
+	case "野蛮冲撞":
+		return CrushMove()
+	case "巨角冲撞":
+		return HornCrush()
+	case "自然疗法":
+		return NatureHealing()
 	default:
 		return nil
 	}
@@ -97,7 +164,7 @@ func Attack() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  1,
-		Targets:   []int{1, 2},
+		Targets:   []int{0, 1, 2},
 		NoTarget:  false,
 	}
 	att.Id = monitorfile.SkillsMap(att.Name)
@@ -142,6 +209,47 @@ func EndHeroTurn() *Skill {
 		Money:     0,
 		Distance:  0,
 		NoTarget:  true,
+	}
+	return end
+}
+
+// 大象移动技能：行动后向距离为1的英雄单位造成1点伤害
+func CrushMove() *Skill {
+	end := &Skill{
+		Id:        5,
+		Name:      "巨兽踩踏",
+		MovePoint: 1,
+		Money:     0,
+		Distance:  1,
+		NoTarget:  false,
+		Targets:   []int{4},
+	}
+	return end
+}
+
+// 犀牛技能：巨角冲撞 移动后对附近1距离的随机敌人造成1.5倍的攻击伤害
+func HornCrush() *Skill {
+	end := &Skill{
+		Id:        6,
+		Name:      "巨角冲撞",
+		MovePoint: 2,
+		Money:     0,
+		Distance:  1,
+		NoTarget:  false,
+		Targets:   []int{4},
+	}
+	return end
+}
+
+func NatureHealing() *Skill {
+	end := &Skill{
+		Id:        7,
+		Name:      "自然疗法",
+		MovePoint: 0,
+		Money:     0,
+		Distance:  2,
+		NoTarget:  false,
+		Targets:   []int{0, 3},
 	}
 	return end
 }

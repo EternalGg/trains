@@ -22,13 +22,12 @@ func (a *SolidAttack) Checker() {
 func (a *SolidAttack) Calculator() (result data.AttackCalculate) {
 
 	attackerBefore := a.Mc.ListenAndFilter(
-		a.Attacker.Id,
+		a.Attacker.Tid,
 		monitorfile.MonitorIdMap("攻击前"))
 	a.Mc.MonitorsPublish(attackerBefore)
-	attacker := a.Mc.ListenAndFilter(a.Attacker.Id,
-		monitorfile.MonitorIdMap("攻击前"))
+	attacker := a.Mc.HeroMonitorMap[a.Attacker]
 	// publish 后
-	for _, monitor := range attacker {
+	for monitor, _ := range attacker {
 		for key, value := range monitor.Bubble {
 			switch key {
 			case monitorfile.BubbleIdMap("固定攻击加成"):

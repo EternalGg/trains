@@ -14,11 +14,9 @@ func CrazyHeroInit() *hero.Hero {
 		Health:         7,
 		THealth:        7,
 		Name:           "狂战士",
-		AttackPoint:    1,
+		AttackPoint:    2,
 		Price:          600,
 		ActionPoint:    10,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
 		Speed:          10,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
@@ -39,6 +37,7 @@ func CrazyMonitorLicense(hero *hero.Hero) (result *monitors.Monitor) {
 		LifeTime:      0,
 		PublishState:  map[int]int{},
 		ListenLicense: []monitors.MonitorLicense{},
+		Bubble:        map[int]int{},
 		RelianceOwner: true,
 	}
 	// forever state

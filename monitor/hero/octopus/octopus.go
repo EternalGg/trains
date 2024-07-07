@@ -9,15 +9,14 @@ import (
 
 func OctopusHeroInit() *hero.Hero {
 	Octopus := hero.Hero{
-		Id:             monitorfile.HeroNameToint("章鱼"),
-		Health:         12,
-		THealth:        12,
-		Name:           "章鱼",
-		AttackPoint:    5,
-		Price:          600,
-		ActionPoint:    1,
-		GameTempo:      map[int]int{},
-		RoundTempo:     map[int]int{},
+		Id:          monitorfile.HeroNameToint("章鱼"),
+		Health:      12,
+		THealth:     12,
+		Name:        "章鱼",
+		AttackPoint: 5,
+		Price:       600,
+		ActionPoint: 1,
+
 		Speed:          12,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

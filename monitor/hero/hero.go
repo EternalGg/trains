@@ -1,6 +1,8 @@
 package hero
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type (
 	Hero struct {
@@ -12,12 +14,11 @@ type (
 		Pos            int // 位置id
 		Name           string
 		AttackPoint    int
-		ActionPoint    int         //行动点
-		Price          int         //价格
-		Speed          int         //速度
-		GameTempo      map[int]int //游戏内临时属性
-		RoundTempo     map[int]int //本轮次临时属性
-		PositiveSkills []int       //skill id
+		ActionPoint    int   //行动点
+		TActionPoint   int   //回合行动点
+		Price          int   //价格
+		Speed          int   //速度
+		PositiveSkills []int //skill id
 	}
 )
 

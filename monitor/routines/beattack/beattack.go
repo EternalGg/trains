@@ -48,9 +48,24 @@ func (B *BeAttack) Checker() (result []int) {
 }
 
 // Calculator 计算闪避率,伤害减免,伤害减免百分比
-func (B *BeAttack) Calculator() (result BeAttackCalculate, beAttack []*monitors.Monitor) {
+func (B *BeAttack) Calculator() (result *BeAttackCalculate, beAttack []*monitors.Monitor) {
+	result = &BeAttackCalculate{
+		BA:               nil,
+		Name:             "",
+		Id:               0,
+		DogeRate:         0,
+		DamageReduce:     0,
+		DamageReduceRate: 0,
+		IsDoge:           false,
+		FinalDamage:      0,
+		Sessions:         nil,
+		ErrorSession:     nil,
+		FightBack:        false,
+		DamageDepthRate:  0,
+		DamageDepth:      0,
+	}
 	beAttack = B.Mc.ListenAndFilter(
-		B.Attacker.Id,
+		B.Targets.Tid,
 		monitorfile.MonitorIdMap("被攻击"))
 	for _, monitor := range beAttack {
 		for key, value := range monitor.Bubble {
@@ -77,29 +92,28 @@ func (B *BeAttack) Calculator() (result BeAttackCalculate, beAttack []*monitors.
 	return
 }
 
-func (B *BeAttack) Processer() (BA BeAttackCalculate) {
+func (B *BeAttack) Processer() (BA *BeAttackCalculate) {
 	// check time
 	//BA.ErrorSession = B.Checker()
-	if len(BA.ErrorSession) >= 1 {
-		return
-	}
+
 	// calculate time
-	beAttackData, monitors := B.Calculator()
+	BA, monitors := B.Calculator()
 	// process time
 	// 反击
 	// 迎击
-	if mc.RandomByTime(beAttackData.DogeRate) {
+	if mc.RandomByTime(BA.DogeRate) {
 		// 如果闪避，则返回闪避以及publish闪避
 		BA.IsDoge = true
-		doge := B.Mc.ListenAndFilter(B.Targets.Id,
+		doge := B.Mc.ListenAndFilter(B.Targets.Tid,
 			monitorfile.MonitorIdMap("闪避"))
 		B.Mc.MonitorsPublish(doge)
 	} else {
 		// 如果没有闪避，则publish
 		// 伤害增加计算
-		B.Damage = B.Damage -
-			(((B.Damage * BA.DamageReduceRate) / 100) -
-				BA.DamageReduce)
+		//fmt.Println(BA.DamageReduce, B.Damage)
+		B.Damage -= ((B.Damage * BA.DamageReduceRate) / 100) +
+			BA.DamageReduce
+		//fmt.Println(BA.DamageReduce, B.Damage)
 		// 伤害加深计算
 		B.Damage += ((B.Damage * int(BA.DamageDepthRate)) / 100) +
 			int(BA.DamageDepth)
@@ -122,3 +136,7 @@ func (B *BeAttack) Processer() (BA BeAttackCalculate) {
 func (B *BeAttack) Later() {
 
 }
+
+// 当单位死亡 自己monitor的所有monitorend 以及所有依赖于自己的from
+// 先把检查自己monitor的做好
+// 兽王：每当monitorcount变动 就检查一遍 监控monitor count变动
