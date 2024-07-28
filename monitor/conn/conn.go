@@ -35,10 +35,10 @@ type (
 		Name string
 	}
 	ServerSession struct {
-		Token []byte // token验证
+		Token string // token验证
 		Type  int    // 0未登陆 1登陆player信息 2大厅等待信息 3卡牌选择信息 4游戏内时间与State
 		// 5 single chose card
-		Data []byte
+		Data string
 	}
 	Lobby struct {
 		WaitingTime int      //等待时间
@@ -49,9 +49,9 @@ type (
 func StrToSession(str string) *room.ClientSession {
 	//fmt.Println(str == "登陆", str[:2] == "登陆")
 	result := room.ClientSession{
-		Token: nil,
+		Token: "",
 		Type:  0,
-		Data:  nil,
+		Data:  "",
 	}
 	// 1.登陆
 	// 2.登陆 返回登陆总时长 后选择游戏模式
@@ -63,7 +63,8 @@ func StrToSession(str string) *room.ClientSession {
 			ID:   1,
 			Name: "test1",
 		}
-		result.Data, _ = json.Marshal(player)
+		j, _ := json.Marshal(player)
+		result.Data = string(j)
 		return &result
 	default:
 		return &result
@@ -106,7 +107,7 @@ func WaitLogin(conn *websocket.Conn, user *Player) bool {
 	switch Sessions.Type {
 	case 1:
 		player := Player{}
-		json.Unmarshal(Sessions.Data, &player)
+		json.Unmarshal([]byte(Sessions.Data), &player)
 		user.ID = player.ID
 		user.Name = player.Name
 		PM.AddPlayer(user)
@@ -125,7 +126,7 @@ func WaitLobby(conn *websocket.Conn, lobby *Lobby) {
 	lm, _ := json.Marshal(lobby)
 	session := room.ClientSession{
 		Type: 2,
-		Data: lm,
+		Data: string(lm),
 	}
 	fmt.Println(lobby.WaitingTime)
 	WaitlobbySession, _ := json.Marshal(session)
@@ -137,13 +138,13 @@ func LoginSession(player *Player) (result []byte) {
 	switch player.ID {
 	case 0:
 		session.Type = 0
-		session.Data = []byte("未登陆！")
+		session.Data = "not login"
 		result, _ = json.Marshal(session)
 		return
 	default:
 		session.Type = 1
 		sd, _ := json.Marshal(player)
-		session.Data = sd
+		session.Data = string(sd)
 		// 应该返还token 先跳过
 		result, _ = json.Marshal(session)
 		return

@@ -39,16 +39,16 @@ type (
 		WaitingTime int //等待时间
 	}
 	ServerSession struct {
-		Token []byte // token验证
+		Token string // token验证
 		Type  int    // 0未登陆 1登陆player信息 2大厅等待信息 3卡牌选择信息 4游戏内时间与State
 		// 5 购买商店信息 6 出售物品信息
-		Data []byte // when Type=1
+		Data string // when Type=1
 	}
 	ClientSession struct {
-		Token []byte // token验证
+		Token string // token验证
 		Type  int    // 0未登陆 1登陆player信息 2大厅等待信息 3卡牌选择信息 4游戏内时间与State
 		// 5 end 6 input channel
-		Data []byte // when Type=1
+		Data string // when Type=1
 	}
 	State struct {
 		Time      int       //时间
@@ -59,7 +59,7 @@ type (
 	}
 	GameSession struct {
 		GameDatatype int //1 选择卡牌
-		GameData     []byte
+		GameData     string
 	}
 	CardChose struct {
 		RemainMoney int                //剩余金钱
@@ -140,7 +140,7 @@ func (r *TestingGame) GameStart() {
 			s := ServerSession{}
 			s.Type = 4
 			jss, _ := json.Marshal(r.GameState)
-			s.Data = jss
+			s.Data = string(jss)
 			r.ChOut <- &s
 		}
 	}()
@@ -158,7 +158,7 @@ func (r *TestingGame) GameStart() {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
 			gs := GameSession{}
-			json.Unmarshal(CardChose.Data, &gs)
+			json.Unmarshal([]byte(CardChose.Data), &gs)
 			ParseInt, _ := strconv.ParseInt(string(gs.GameData), 10, 32)
 			id := int(ParseInt)
 			// 如果为选择卡牌
@@ -179,7 +179,7 @@ func (r *TestingGame) GameStart() {
 			//resultJson, _ := json.Marshal(result)
 			//gs.GameData = resultJson
 			jgs, _ := json.Marshal(gs)
-			s.Data = jgs
+			s.Data = string(jgs)
 			r.ChOut <- &s
 		}
 
@@ -207,7 +207,7 @@ func (r *TestingGame) GameStart() {
 				// end 结束回合
 				// pkg 查询金钱和卡包
 				gs := GameSession{}
-				json.Unmarshal(LandingOrBuying.Data, &gs)
+				json.Unmarshal([]byte(LandingOrBuying.Data), &gs)
 				switch gs.GameDatatype {
 				case 2:
 					if string(gs.GameData) == "shop" {
@@ -216,13 +216,13 @@ func (r *TestingGame) GameStart() {
 						gs.GameDatatype = 2
 						bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
 						jbs, _ := json.Marshal(bs)
-						gs.GameData = jbs
+						gs.GameData = string(jbs)
 						jgs, _ := json.Marshal(gs)
-						s.Data = jgs
+						s.Data = string(jgs)
 						r.ChOut <- &s
 					} else {
 						shop := Shop{}
-						json.Unmarshal(gs.GameData, &shop)
+						json.Unmarshal([]byte(gs.GameData), &shop)
 						if shop.IsSale {
 							sale := r.MonitorCenter.Economy[r.Gamer.ID].SaleHero(shop.CardId)
 							r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, sale)
@@ -231,9 +231,9 @@ func (r *TestingGame) GameStart() {
 							s.Type = 3
 							gs.GameDatatype = 7
 							jsale, _ := json.Marshal(n)
-							gs.GameData = jsale
+							gs.GameData = string(jsale)
 							jgs, _ := json.Marshal(gs)
-							s.Data = jgs
+							s.Data = string(jgs)
 							r.ChOut <- &s
 						} else {
 							buy := r.MonitorCenter.Economy[r.Gamer.ID].BuyHero(shop.CardId)
@@ -244,16 +244,16 @@ func (r *TestingGame) GameStart() {
 							s.Type = 3
 							gs.GameDatatype = 7
 							jbuy, _ := json.Marshal(n)
-							gs.GameData = jbuy
+							gs.GameData = string(jbuy)
 							jgs, _ := json.Marshal(gs)
-							s.Data = jgs
+							s.Data = string(jgs)
 							r.ChOut <- &s
 						}
 					}
 				case 3:
 					// 地图以及登陆
 					land := Landing{}
-					json.Unmarshal(gs.GameData, &land)
+					json.Unmarshal([]byte(gs.GameData), &land)
 					//fmt.Println(land.Position, land.CardId)
 					if string(gs.GameData) != ("map") {
 						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
@@ -274,9 +274,9 @@ func (r *TestingGame) GameStart() {
 								s.Type = 3
 								gs.GameDatatype = 7
 								jn, _ := json.Marshal(n)
-								gs.GameData = jn
+								gs.GameData = string(jn)
 								jgs, _ := json.Marshal(gs)
-								s.Data = jgs
+								s.Data = string(jgs)
 								r.ChOut <- &s
 							}
 						}
@@ -286,9 +286,9 @@ func (r *TestingGame) GameStart() {
 					gs.GameDatatype = 3
 					m := r.MonitorCenter.BattleFiled
 					jm, _ := json.Marshal(m)
-					gs.GameData = jm
+					gs.GameData = string(jm)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 4:
 					//结束该回合
@@ -301,9 +301,9 @@ func (r *TestingGame) GameStart() {
 					s.Type = 3
 					gs.GameDatatype = 7
 					jn, _ := json.Marshal(n)
-					gs.GameData = jn
+					gs.GameData = string(jn)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 5:
 					// 查询卡牌和经济
@@ -315,9 +315,9 @@ func (r *TestingGame) GameStart() {
 						r.MonitorCenter.Economy[r.Gamer.ID].Money,
 					}
 					jpkg, _ := json.Marshal(pkg)
-					gs.GameData = jpkg
+					gs.GameData = string(jpkg)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				}
 			}
@@ -346,12 +346,12 @@ func (r *TestingGame) GameStart() {
 				// end 结束回合
 				// pkg 查询金钱和卡包
 				gs := GameSession{}
-				json.Unmarshal(LandingOrBanking.Data, &gs)
+				json.Unmarshal([]byte(LandingOrBanking.Data), &gs)
 				switch gs.GameDatatype {
 				case 3:
 					// 地图以及登陆
 					land := Landing{}
-					json.Unmarshal(gs.GameData, &land)
+					json.Unmarshal([]byte(gs.GameData), &land)
 					//fmt.Println(land.Position, land.CardId)
 					if string(gs.GameData) != ("map") {
 						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
@@ -372,9 +372,9 @@ func (r *TestingGame) GameStart() {
 								s.Type = 3
 								gs.GameDatatype = 7
 								jn, _ := json.Marshal(n)
-								gs.GameData = jn
+								gs.GameData = string(jn)
 								jgs, _ := json.Marshal(gs)
-								s.Data = jgs
+								s.Data = string(jgs)
 								r.ChOut <- &s
 							}
 						}
@@ -384,9 +384,9 @@ func (r *TestingGame) GameStart() {
 					gs.GameDatatype = 3
 					m := r.MonitorCenter.BattleFiled
 					jm, _ := json.Marshal(m)
-					gs.GameData = jm
+					gs.GameData = string(jm)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 4:
 					//结束该回合
@@ -398,9 +398,9 @@ func (r *TestingGame) GameStart() {
 					s.Type = 3
 					gs.GameDatatype = 7
 					jn, _ := json.Marshal(n)
-					gs.GameData = jn
+					gs.GameData = string(jn)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 5:
 					// 查询卡牌和经济
@@ -412,9 +412,9 @@ func (r *TestingGame) GameStart() {
 						r.MonitorCenter.Economy[r.Gamer.ID].Money,
 					}
 					jpkg, _ := json.Marshal(pkg)
-					gs.GameData = jpkg
+					gs.GameData = string(jpkg)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 6:
 					// banking time
@@ -445,12 +445,12 @@ func (r *TestingGame) GameStart() {
 				// end 结束回合
 				// pkg 查询金钱和卡包
 				gs := GameSession{}
-				json.Unmarshal(LandingOrBanking.Data, &gs)
+				json.Unmarshal([]byte(LandingOrBanking.Data), &gs)
 				switch gs.GameDatatype {
 				case 3:
 					// 地图以及登陆
 					land := Landing{}
-					json.Unmarshal(gs.GameData, &land)
+					json.Unmarshal([]byte(gs.GameData), &land)
 					//fmt.Println(land.Position, land.CardId)
 					if string(gs.GameData) != ("map") {
 						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
@@ -471,9 +471,9 @@ func (r *TestingGame) GameStart() {
 								s.Type = 3
 								gs.GameDatatype = 7
 								jn, _ := json.Marshal(n)
-								gs.GameData = jn
+								gs.GameData = string(jn)
 								jgs, _ := json.Marshal(gs)
-								s.Data = jgs
+								s.Data = string(jgs)
 								r.ChOut <- &s
 							}
 						}
@@ -483,9 +483,9 @@ func (r *TestingGame) GameStart() {
 					gs.GameDatatype = 3
 					m := r.MonitorCenter.BattleFiled
 					jm, _ := json.Marshal(m)
-					gs.GameData = jm
+					gs.GameData = string(jm)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 4:
 					//结束该回合
@@ -497,9 +497,9 @@ func (r *TestingGame) GameStart() {
 					s.Type = 3
 					gs.GameDatatype = 7
 					jn, _ := json.Marshal(n)
-					gs.GameData = jn
+					gs.GameData = string(jn)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 5:
 					// 查询卡牌和经济
@@ -511,9 +511,9 @@ func (r *TestingGame) GameStart() {
 						r.MonitorCenter.Economy[r.Gamer.ID].Money,
 					}
 					jpkg, _ := json.Marshal(pkg)
-					gs.GameData = jpkg
+					gs.GameData = string(jpkg)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				case 7:
 				// wild shop  time
@@ -878,9 +878,9 @@ func (r *TestingGame) GameRoutine() {
 				// 如果可以释放 两个判断结束 资源扣除后释放技能
 				case heroTurn := <-r.Ch:
 					gs := GameSession{}
-					json.Unmarshal(heroTurn.Data, &gs)
+					json.Unmarshal([]byte(heroTurn.Data), &gs)
 					move := Move{}
-					json.Unmarshal(gs.GameData, &move)
+					json.Unmarshal([]byte(gs.GameData), &move)
 					no := &notice.Notice{}
 					var state int
 					var skill *Skill
@@ -1048,9 +1048,9 @@ func (r *TestingGame) GameRoutine() {
 					s.Type = 3
 					gs.GameDatatype = 7
 					jsale, _ := json.Marshal(no)
-					gs.GameData = jsale
+					gs.GameData = string(jsale)
 					jgs, _ := json.Marshal(gs)
-					s.Data = jgs
+					s.Data = string(jgs)
 					r.ChOut <- &s
 				}
 			}
@@ -1069,9 +1069,9 @@ func (r *TestingGame) GameRoutine() {
 		s.Type = 3
 		gs.GameDatatype = 7
 		jsale, _ := json.Marshal(no)
-		gs.GameData = jsale
+		gs.GameData = string(jsale)
 		jgs, _ := json.Marshal(gs)
-		s.Data = jgs
+		s.Data = string(jgs)
 		r.ChOut <- &s
 	}
 }
