@@ -121,14 +121,14 @@ func WaitLogin(conn *websocket.Conn, user *Player) bool {
 	return true
 }
 func WaitLobby(conn *websocket.Conn, lobby *Lobby) {
-	time.Sleep(5000000000)
-	lobby.WaitingTime += 5
+	time.Sleep(1000000000)
+	lobby.WaitingTime += 1
 	lm, _ := json.Marshal(lobby)
 	session := room.ClientSession{
 		Type: 2,
 		Data: string(lm),
 	}
-	fmt.Println(lobby.WaitingTime)
+
 	WaitlobbySession, _ := json.Marshal(session)
 	conn.WriteMessage(1, WaitlobbySession)
 }
@@ -192,7 +192,6 @@ func Conn(w http.ResponseWriter, r *http.Request) {
 
 		switch Sessions.Type {
 		case 4:
-			//fmt.Println("zzzzzz", PM.playerState[NowPlayer])
 
 			if PM.playerState[NowPlayer] == 1 {
 				IsLobby = false
