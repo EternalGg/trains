@@ -10,14 +10,14 @@ import (
 
 func EleHeroInit() *hero.Hero {
 	Ele := hero.Hero{
-		Id:          monitorfile.HeroNameToint("大象"),
-		Health:      12,
-		THealth:     12,
-		Name:        "大象",
-		AttackPoint: 3,
-		Price:       450,
-		ActionPoint: 1,
-
+		Id:             monitorfile.HeroNameToint("大象"),
+		Health:         12,
+		THealth:        12,
+		Name:           "大象",
+		AttackPoint:    3,
+		Price:          450,
+		ActionPoint:    1,
+		AreadyChose:    false,
 		Speed:          12,
 		PositiveSkills: []int{1, 5, 3, 4},
 	}

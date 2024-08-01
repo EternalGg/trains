@@ -62,9 +62,11 @@ type (
 		GameData     string
 	}
 	CardChose struct {
-		RemainMoney int                //剩余金钱
-		CardPool    map[int]*hero.Hero //可选择卡牌池
-		ChoseCards  map[int]*hero.Hero //已选择卡牌池
+		RemainMoney int //剩余金钱
+		//CardPool    map[int]*hero.Hero //可选择卡牌池
+		//ChoseCards  map[int]*hero.Hero //已选择卡牌池
+		CardPool     []*hero.Hero
+		AlreadyChose []*hero.Hero
 	}
 	PKG struct {
 		CardsPkg map[int]*shop.Cards // 卡牌
@@ -145,15 +147,15 @@ func (r *TestingGame) GameStart() {
 		}
 	}()
 	cc := CardChose{
-		RemainMoney: r.MonitorCenter.Economy[r.Gamer.ID].Money,
-		CardPool:    heros.SelectAllHeroByMap(),
-		ChoseCards:  map[int]*hero.Hero{},
+		RemainMoney:  r.MonitorCenter.Economy[r.Gamer.ID].Money,
+		CardPool:     heros.SelectAllHeroByList(),
+		AlreadyChose: []*hero.Hero{},
 	}
 
 	//card chose turn
 	r.GameState.DataState = 1
 	r.GameState.CC = cc
-	for len(cc.ChoseCards) != 4 {
+	for len(cc.AlreadyChose) != 7 {
 		select {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
@@ -166,12 +168,10 @@ func (r *TestingGame) GameStart() {
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
 				cc.RemainMoney -= cc.CardPool[id].Price
-				cc.ChoseCards[id] = cc.CardPool[id]
-				delete(cc.CardPool, id)
-				//result.SessionState = "卡牌选择成功!"
+				cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
+				cc.CardPool[id].AreadyChose = true
 				r.GameState.CC = cc
 			} else {
-				//result.SessionState = "Error已经被选择!"
 			}
 			s, gs := ServerSession{}, GameSession{}
 			s.Type = 3
@@ -184,7 +184,7 @@ func (r *TestingGame) GameStart() {
 		}
 
 	}
-	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.ChoseCards)
+	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.AlreadyChose)
 	r.MonitorCenter.Economy[r.Gamer.ID].Money = cc.RemainMoney
 	//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].ShowHero())
 	// card chose 选择结束 进入routine

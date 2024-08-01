@@ -19,6 +19,7 @@ type (
 		Price          int   //价格
 		Speed          int   //速度
 		PositiveSkills []int //skill id
+		AreadyChose    bool
 	}
 )
 

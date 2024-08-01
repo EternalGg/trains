@@ -9,14 +9,14 @@ import (
 
 func HippoHeroInit() *hero.Hero {
 	Hippo := hero.Hero{
-		Id:          monitorfile.HeroNameToint("河马"),
-		Health:      9,
-		THealth:     9,
-		Name:        "河马",
-		AttackPoint: 3,
-		Price:       350,
-		ActionPoint: 1,
-
+		Id:             monitorfile.HeroNameToint("河马"),
+		Health:         9,
+		THealth:        9,
+		Name:           "河马",
+		AttackPoint:    3,
+		Price:          350,
+		ActionPoint:    1,
+		AreadyChose:    false,
 		Speed:          12,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}

@@ -19,6 +19,7 @@ func RhinoHeroInit() *hero.Hero {
 		Price:          350,
 		Speed:          12,
 		PositiveSkills: []int{1, 2, 3, 4, 6},
+		AreadyChose:    false,
 	}
 	return &Rhino
 }

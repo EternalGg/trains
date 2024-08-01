@@ -19,6 +19,7 @@ func CrazyHeroInit() *hero.Hero {
 		ActionPoint:    10,
 		Speed:          10,
 		PositiveSkills: []int{1, 2, 3, 4},
+		AreadyChose:    false,
 	}
 	return &crazy
 }
