@@ -154,9 +154,11 @@ func (r *TestingGame) GameStart() {
 		}
 	}()
 	cc := CardChose{
-		RemainMoney:  r.MonitorCenter.Economy[r.Gamer.ID].Money,
-		CardPool:     heros.SelectAllHeroByList(),
-		AlreadyChose: []*hero.Hero{},
+		RemainMoney:     r.MonitorCenter.Economy[r.Gamer.ID].Money,
+		CardPool:        heros.SelectAllHeroByList(),
+		AlreadyChose:    []*hero.Hero{},
+		CardPoolStr:     HeroListToStrList(heros.SelectAllHeroByList()),
+		AlreadyChoseStr: []string{},
 	}
 
 	//card chose turn
@@ -179,6 +181,8 @@ func (r *TestingGame) GameStart() {
 				cc.RemainMoney -= cc.CardPool[id].Price
 				cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
 				cc.CardPool[id].AreadyChose = true
+				cc.AlreadyChoseStr = HeroListToStrList(cc.AlreadyChose)
+				cc.CardPoolStr = HeroListToStrList(cc.CardPool)
 				r.GameState.CC = cc
 				ccjson, _ := json.Marshal(cc)
 				r.GameState.CCStr = string(ccjson)
@@ -1086,4 +1090,13 @@ func (r *TestingGame) GameRoutine() {
 		s.Data = string(jgs)
 		r.ChOut <- &s
 	}
+}
+
+func HeroListToStrList(heros []*hero.Hero) []string {
+	result := make([]string, 0)
+	for i := 0; i < len(heros); i++ {
+		herostr, _ := json.Marshal(heros[i])
+		result = append(result, string(herostr))
+	}
+	return result
 }
