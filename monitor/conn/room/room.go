@@ -56,7 +56,10 @@ type (
 		DataState int       //数据类型 1 卡牌选择 2 英雄轮次
 		HT        HeroTurn  //hero turn data
 		CC        CardChose //chose card
+		HTStr     string
+		CCStr     string
 	}
+	// 从客户端发来的session
 	GameSession struct {
 		GameDatatype int //1 选择卡牌
 		GameData     string
@@ -65,8 +68,10 @@ type (
 		RemainMoney int //剩余金钱
 		//CardPool    map[int]*hero.Hero //可选择卡牌池
 		//ChoseCards  map[int]*hero.Hero //已选择卡牌池
-		CardPool     []*hero.Hero
-		AlreadyChose []*hero.Hero
+		CardPool        []*hero.Hero
+		AlreadyChose    []*hero.Hero
+		CardPoolStr     []string
+		AlreadyChoseStr []string
 	}
 	PKG struct {
 		CardsPkg map[int]*shop.Cards // 卡牌
@@ -85,8 +90,10 @@ type (
 	}
 	HeroTurn struct {
 		Skills      []*Skill
+		SkillsStr   []string
 		RemainMoney int
 		Hero        *hero.Hero
+		HeroStr     string
 	}
 	Move struct {
 		SkillId  int //技能序列
@@ -155,6 +162,8 @@ func (r *TestingGame) GameStart() {
 	//card chose turn
 	r.GameState.DataState = 1
 	r.GameState.CC = cc
+	ccjson, _ := json.Marshal(cc)
+	r.GameState.CCStr = string(ccjson)
 	for len(cc.AlreadyChose) != 7 {
 		select {
 		case CardChose := <-r.Ch:
@@ -171,6 +180,8 @@ func (r *TestingGame) GameStart() {
 				cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
 				cc.CardPool[id].AreadyChose = true
 				r.GameState.CC = cc
+				ccjson, _ := json.Marshal(cc)
+				r.GameState.CCStr = string(ccjson)
 			} else {
 			}
 			s, gs := ServerSession{}, GameSession{}
@@ -190,6 +201,7 @@ func (r *TestingGame) GameStart() {
 	// card chose 选择结束 进入routine
 	r.GameState.GameState = "早上"
 	r.GameState.DataState = 0
+	// robot
 	r.LandingCrazyRobot()
 	//fmt.Println("game state" + strconv.Itoa(r.GameState))
 	// 自由模式 游戏结束根据 游戏外quit
