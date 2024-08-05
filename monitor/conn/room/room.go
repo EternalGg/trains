@@ -68,10 +68,9 @@ type (
 		RemainMoney int //剩余金钱
 		//CardPool    map[int]*hero.Hero //可选择卡牌池
 		//ChoseCards  map[int]*hero.Hero //已选择卡牌池
-		CardPool        []*hero.Hero
-		AlreadyChose    []*hero.Hero
-		CardPoolStr     []string
-		AlreadyChoseStr []string
+		CardPool    []*hero.Hero
+		CardPoolStr []string
+		ChoseCount  int
 	}
 	PKG struct {
 		CardsPkg map[int]*shop.Cards // 卡牌
@@ -166,7 +165,7 @@ func (r *TestingGame) GameStart() {
 	r.GameState.CC = cc
 	ccjson, _ := json.Marshal(cc)
 	r.GameState.CCStr = string(ccjson)
-	for len(cc.AlreadyChose) != 7 {
+	for len(cc.ChoseCount) != 7 {
 		select {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
@@ -179,9 +178,10 @@ func (r *TestingGame) GameStart() {
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
 				cc.RemainMoney -= cc.CardPool[id].Price
-				cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
+				//cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
 				cc.CardPool[id].AreadyChose = true
-				cc.AlreadyChoseStr = HeroListToStrList(cc.AlreadyChose)
+
+				//cc.AlreadyChoseStr = HeroListToStrList(cc.AlreadyChose)
 				cc.CardPoolStr = HeroListToStrList(cc.CardPool)
 				r.GameState.CC = cc
 				ccjson, _ := json.Marshal(cc)
@@ -191,8 +191,7 @@ func (r *TestingGame) GameStart() {
 			s, gs := ServerSession{}, GameSession{}
 			s.Type = 3
 			gs.GameDatatype = 1
-			//resultJson, _ := json.Marshal(result)
-			//gs.GameData = resultJson
+
 			jgs, _ := json.Marshal(gs)
 			s.Data = string(jgs)
 			r.ChOut <- &s
