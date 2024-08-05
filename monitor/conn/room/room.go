@@ -153,11 +153,11 @@ func (r *TestingGame) GameStart() {
 		}
 	}()
 	cc := CardChose{
-		RemainMoney:     r.MonitorCenter.Economy[r.Gamer.ID].Money,
-		CardPool:        heros.SelectAllHeroByList(),
-		AlreadyChose:    []*hero.Hero{},
-		CardPoolStr:     HeroListToStrList(heros.SelectAllHeroByList()),
-		AlreadyChoseStr: []string{},
+		RemainMoney: r.MonitorCenter.Economy[r.Gamer.ID].Money,
+		CardPool:    heros.SelectAllHeroByList(),
+		//AlreadyChose:    []*hero.Hero{},
+		CardPoolStr: HeroListToStrList(heros.SelectAllHeroByList()),
+		//AlreadyChoseStr: []string{},
 	}
 
 	//card chose turn
@@ -165,7 +165,7 @@ func (r *TestingGame) GameStart() {
 	r.GameState.CC = cc
 	ccjson, _ := json.Marshal(cc)
 	r.GameState.CCStr = string(ccjson)
-	for len(cc.ChoseCount) != 7 {
+	for cc.ChoseCount != 7 {
 		select {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
@@ -178,10 +178,9 @@ func (r *TestingGame) GameStart() {
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
 				cc.RemainMoney -= cc.CardPool[id].Price
-				//cc.AlreadyChose = append(cc.AlreadyChose, cc.CardPool[id])
+
 				cc.CardPool[id].AreadyChose = true
 
-				//cc.AlreadyChoseStr = HeroListToStrList(cc.AlreadyChose)
 				cc.CardPoolStr = HeroListToStrList(cc.CardPool)
 				r.GameState.CC = cc
 				ccjson, _ := json.Marshal(cc)
@@ -196,9 +195,8 @@ func (r *TestingGame) GameStart() {
 			s.Data = string(jgs)
 			r.ChOut <- &s
 		}
-
 	}
-	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.AlreadyChose)
+	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.CardPool)
 	r.MonitorCenter.Economy[r.Gamer.ID].Money = cc.RemainMoney
 	//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].ShowHero())
 	// card chose 选择结束 进入routine

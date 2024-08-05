@@ -60,8 +60,10 @@ func (e *Economy) AddCardFromPKG(card *shop.Cards) {
 
 func (e *Economy) ChoseBefore(hero []*hero.Hero) {
 	for _, h := range hero {
-		c := shop.MakeCard(*h)
-		e.AddCardFromPKG(c)
+		if h.AreadyChose == true {
+			c := shop.MakeCard(*h)
+			e.AddCardFromPKG(c)
+		}
 	}
 	e.BaseShop.HerosToShopList(hero)
 }
