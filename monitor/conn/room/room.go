@@ -177,14 +177,17 @@ func (r *TestingGame) GameStart() {
 			//result := {}
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
-				cc.RemainMoney -= cc.CardPool[id].Price
+				if !cc.CardPool[id].AreadyChose {
+					cc.RemainMoney -= cc.CardPool[id].Price
+					cc.CardPool[id].AreadyChose = true
+					cc.CardPoolStr = HeroListToStrList(cc.CardPool)
+					r.GameState.CC = cc
+					ccjson, _ := json.Marshal(cc)
+					r.GameState.CCStr = string(ccjson)
+				} else {
+					//已经选择
+				}
 
-				cc.CardPool[id].AreadyChose = true
-
-				cc.CardPoolStr = HeroListToStrList(cc.CardPool)
-				r.GameState.CC = cc
-				ccjson, _ := json.Marshal(cc)
-				r.GameState.CCStr = string(ccjson)
 			} else {
 			}
 			s, gs := ServerSession{}, GameSession{}
