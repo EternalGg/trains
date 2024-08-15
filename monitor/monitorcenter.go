@@ -293,7 +293,8 @@ func (mc *MonitorCenter) MonitorPublish(m *monitors.Monitor) {
 				AttrMap: m.Bubble,
 			}
 			attr.Publish()
-			mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
+
+			//mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
 		}
 	case monitorfile.MonitorIdMap("野兽之王"):
 		m.Bubble[monitorfile.BubbleIdMap("攻击加成")] =
@@ -312,7 +313,7 @@ func (mc *MonitorCenter) MonitorPublish(m *monitors.Monitor) {
 		}
 		attr.Publish()
 		// mc log data
-		mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
+		//mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade(m.Name, m.Owner, true, attr.AttrMap))
 	}
 	return
 }
@@ -407,14 +408,14 @@ func (mc *MonitorCenter) TimeListener(t uint) {
 				if u == mc.Time.Time.IsNight {
 					attr.ToNegative()
 					attr.Publish()
-					b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
+					//b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
 					//fmt.Println("夜行动物,end!")
-					mc.MonitorLogs = append(mc.MonitorLogs, b)
+					//mc.MonitorLogs = append(mc.MonitorLogs, b)
 				} else {
 					attr.Publish()
-					b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
+					//b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
 					//fmt.Println("夜行动物,start!")
-					mc.MonitorLogs = append(mc.MonitorLogs, b)
+					//mc.MonitorLogs = append(mc.MonitorLogs, b)
 				}
 			}
 		}
@@ -431,13 +432,13 @@ func (mc *MonitorCenter) TimeListener(t uint) {
 					// 白天
 					attr.ToNegative()
 					attr.Publish()
-					b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
+					//b := notice.BubbleResultMade("夜行动物取消", attr.Hero, true, attr.AttrMap)
 
-					mc.MonitorLogs = append(mc.MonitorLogs, b)
+					//mc.MonitorLogs = append(mc.MonitorLogs, b)
 				} else {
 					attr.Publish()
-					b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
-					mc.MonitorLogs = append(mc.MonitorLogs, b)
+					//b := notice.BubbleResultMade("夜行动物启动", attr.Hero, true, attr.AttrMap)
+					//mc.MonitorLogs = append(mc.MonitorLogs, b)
 				}
 			}
 		}
@@ -469,7 +470,7 @@ func (mc *MonitorCenter) TurnEndListen(h *hero.Hero) {
 						}
 					}
 					monitor.LifeTime = 0
-					mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade("巨型食草动物结束!", h, true, attr.AttrMap))
+					//mc.MonitorLogs = append(mc.MonitorLogs, notice.BubbleResultMade("巨型食草动物结束!", h, true, attr.AttrMap))
 				}
 			}
 		}

@@ -147,17 +147,23 @@ func (r *TestingGame) GameStart() {
 			r.GameState.Time = r.T
 			s := ServerSession{}
 			s.Type = 4
-			jss, _ := json.Marshal(r.GameState)
-			s.Data = string(jss)
-			r.ChOut <- &s
+			ns := State{}
+			switch r.GameState.GameState {
+			case "早上":
+				ns.Time = r.GameState.Time
+				ns.GameState = r.GameState.GameState
+				ns.DataState = r.GameState.DataState
+				jss, _ := json.Marshal(ns)
+				s.Data = string(jss)
+				r.ChOut <- &s
+			}
+
 		}
 	}()
 	cc := CardChose{
 		RemainMoney: r.MonitorCenter.Economy[r.Gamer.ID].Money,
 		CardPool:    heros.SelectAllHeroByList(),
-		//AlreadyChose:    []*hero.Hero{},
 		CardPoolStr: HeroListToStrList(heros.SelectAllHeroByList()),
-		//AlreadyChoseStr: []string{},
 	}
 
 	//card chose turn
@@ -165,7 +171,7 @@ func (r *TestingGame) GameStart() {
 	r.GameState.CC = cc
 	ccjson, _ := json.Marshal(cc)
 	r.GameState.CCStr = string(ccjson)
-	for cc.ChoseCount != 7 {
+	for cc.ChoseCount != 6 {
 		select {
 		case CardChose := <-r.Ch:
 			// 如果为single chose
@@ -184,6 +190,7 @@ func (r *TestingGame) GameStart() {
 					r.GameState.CC = cc
 					ccjson, _ := json.Marshal(cc)
 					r.GameState.CCStr = string(ccjson)
+					cc.ChoseCount++
 				} else {
 					//已经选择
 				}
@@ -201,7 +208,7 @@ func (r *TestingGame) GameStart() {
 	}
 	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.CardPool)
 	r.MonitorCenter.Economy[r.Gamer.ID].Money = cc.RemainMoney
-	//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].ShowHero())
+
 	// card chose 选择结束 进入routine
 	r.GameState.GameState = "早上"
 	r.GameState.DataState = 0

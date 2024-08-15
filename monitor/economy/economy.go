@@ -66,6 +66,7 @@ func (e *Economy) ChoseBefore(hero []*hero.Hero) {
 		}
 	}
 	e.BaseShop.HerosToShopList(hero)
+	//fmt.Println(e.BaseShop.Cards, e.CardsPkg)
 }
 
 // shops

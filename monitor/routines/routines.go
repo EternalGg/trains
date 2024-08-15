@@ -1,9 +1,7 @@
 package routines
 
 import (
-	"encoding/json"
 	monitorcenter "train/monitor"
-	"train/monitor/conn/room/notice"
 	"train/monitor/hero/attribute"
 	"train/monitor/hero/dead"
 	"train/monitor/monitorfile"
@@ -18,8 +16,8 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		attackData := types.(attack.Attack)
 		// 攻击流程
 		a := attackData.Processer()
-		ja, _ := json.Marshal(a)
-		log.MonitorLogs = append(log.MonitorLogs, notice.AttackResultMade(true, a.AttackerName, ja))
+		//ja, _ := json.Marshal(a)
+		//log.MonitorLogs = append(log.MonitorLogs, notice.AttackResultMade(true, a.AttackerName, ja))
 		// 错误退出
 		if len(a.ErrorSession) != 0 {
 			return
@@ -39,9 +37,9 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		//fmt.Println(beAttackData.Damage)
 		// processer time
 		ba := beAttackData.Processer()
-		jba, _ := json.Marshal(ba)
+		//jba, _ := json.Marshal(ba)
 		//fmt.Println(ba.FinalDamage)
-		log.MonitorLogs = append(log.MonitorLogs, notice.BeAttackResultMade(true, ba.Name, jba))
+		//log.MonitorLogs = append(log.MonitorLogs, notice.BeAttackResultMade(true, ba.Name, jba))
 
 		// 出现错误退出
 		if len(ba.ErrorSession) != 0 {
@@ -65,8 +63,8 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		takeDamageData := types.(takedamage.TakeDamage)
 		// processer time
 		tdd := takeDamageData.Processer()
-		jtdd, _ := json.Marshal(tdd)
-		log.MonitorLogs = append(log.MonitorLogs, notice.TakeDamageResultMade(true, takeDamageData.Name, jtdd))
+		//jtdd, _ := json.Marshal(tdd)
+		//log.MonitorLogs = append(log.MonitorLogs, notice.TakeDamageResultMade(true, takeDamageData.Name, jtdd))
 
 		// 反弹判断
 		if tdd.HitBack != 0 {
@@ -104,8 +102,8 @@ func Routines(types interface{}, log *monitorcenter.MonitorCenter) {
 		}
 
 		//2.log死亡信息
-		dr := notice.DeadResultMade(d.Killer, d.Object)
-		log.MonitorLogs = append(log.MonitorLogs, dr)
+		//dr := notice.DeadResultMade(d.Killer, d.Object)
+		//log.MonitorLogs = append(log.MonitorLogs, dr)
 
 		//3.单位死亡 monitor pointer end
 		log.HeroAllMonitorDelete(d.Object)

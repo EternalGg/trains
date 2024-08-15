@@ -43,11 +43,12 @@ func (b *BaseShop) HerosToShop(heros map[int]*hero.Hero) {
 }
 func (b *BaseShop) HerosToShopList(heros []*hero.Hero) {
 	for _, h := range heros {
-
-		c := MakeCard(*h)
-		c.BuyCd = (c.Hero.Price - 100) / 100
-		c.CD = c.BuyCd
-		b.Cards[h.Id] = c
+		if h.AreadyChose == true {
+			c := MakeCard(*h)
+			c.BuyCd = (c.Hero.Price - 100) / 100
+			c.CD = c.BuyCd
+			b.Cards[h.Id] = c
+		}
 	}
 }
 
