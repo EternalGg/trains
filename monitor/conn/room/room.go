@@ -51,6 +51,7 @@ type (
 		Data string // when Type=1
 	}
 	State struct {
+		Version   int       //信息版本
 		Time      int       //时间
 		GameState string    //游戏时间状态
 		DataState int       //数据类型 1 卡牌选择 2 英雄轮次
@@ -66,8 +67,6 @@ type (
 	}
 	CardChose struct {
 		RemainMoney int //剩余金钱
-		//CardPool    map[int]*hero.Hero //可选择卡牌池
-		//ChoseCards  map[int]*hero.Hero //已选择卡牌池
 		CardPool    []*hero.Hero
 		CardPoolStr []string
 		ChoseCount  int
@@ -94,10 +93,6 @@ type (
 		Hero        *hero.Hero
 		HeroStr     string
 	}
-	Move struct {
-		SkillId  int //技能序列
-		TargetId int //目标序列 TargetId = SelectList[i] + 1
-	}
 )
 type (
 	Landing struct {
@@ -107,6 +102,10 @@ type (
 	Shop struct {
 		IsSale bool //是否售卖
 		CardId int  //卡牌id
+	}
+	Move struct {
+		SkillId  int //技能序列
+		TargetId int //目标序列 TargetId = SelectList[i] + 1
 	}
 )
 
@@ -149,10 +148,20 @@ func (r *TestingGame) GameStart() {
 			s.Type = 4
 			ns := State{}
 			switch r.GameState.GameState {
-			case "早上":
+			case "选择卡牌":
 				ns.Time = r.GameState.Time
 				ns.GameState = r.GameState.GameState
 				ns.DataState = r.GameState.DataState
+				ns.CCStr = r.GameState.CCStr
+				ns.Version = r.GameState.Version
+				jss, _ := json.Marshal(ns)
+				s.Data = string(jss)
+				r.ChOut <- &s
+			case "早上":
+				ns.Time = r.GameState.Time
+				ns.GameState = r.GameState.GameState
+				ns.CCStr = r.GameState.CCStr
+				ns.Version = r.GameState.Version
 				jss, _ := json.Marshal(ns)
 				s.Data = string(jss)
 				r.ChOut <- &s
@@ -179,8 +188,6 @@ func (r *TestingGame) GameStart() {
 			json.Unmarshal([]byte(CardChose.Data), &gs)
 			ParseInt, _ := strconv.ParseInt(string(gs.GameData), 10, 32)
 			id := int(ParseInt)
-			// 如果为选择卡牌
-			//result := {}
 			// 如果卡牌选择为空（未选择）
 			if cc.CardPool[id] != nil {
 				if !cc.CardPool[id].AreadyChose {
@@ -188,6 +195,7 @@ func (r *TestingGame) GameStart() {
 					cc.CardPool[id].AreadyChose = true
 					cc.CardPoolStr = HeroListToStrList(cc.CardPool)
 					r.GameState.CC = cc
+					r.GameState.Version++
 					ccjson, _ := json.Marshal(cc)
 					r.GameState.CCStr = string(ccjson)
 					cc.ChoseCount++
@@ -200,7 +208,6 @@ func (r *TestingGame) GameStart() {
 			s, gs := ServerSession{}, GameSession{}
 			s.Type = 3
 			gs.GameDatatype = 1
-
 			jgs, _ := json.Marshal(gs)
 			s.Data = string(jgs)
 			r.ChOut <- &s
@@ -263,6 +270,7 @@ func (r *TestingGame) GameStart() {
 							r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, buy)
 
 							n := notice.ActionToNotice([]notice.ActionData{*buy}, "购买卡牌", 3)
+							r.GameState.Version++
 							s, gs := ServerSession{}, GameSession{}
 							s.Type = 3
 							gs.GameDatatype = 7
@@ -279,19 +287,14 @@ func (r *TestingGame) GameStart() {
 					json.Unmarshal([]byte(gs.GameData), &land)
 					//fmt.Println(land.Position, land.CardId)
 					if string(gs.GameData) != ("map") {
-						//for i, i2 := range r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg {
-						//	fmt.Println(i, i2)
-						//}
 						if r.MonitorCenter.BattleFiled.Positions[land.Position] != nil && r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId] != nil {
 							// 如果没有这个bf
 							if r.MonitorCenter.BattleFiled.Positions[land.Position].Hero == nil {
-								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId].Hero)
-								//fmt.Println(r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg[land.CardId])
 								// position
 								// 放入英雄map以及时间map
 								ad := r.CardLanding(land)
 								r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, ad)
-
+								r.GameState.Version++
 								n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
 								s, gs := ServerSession{}, GameSession{}
 								s.Type = 3
@@ -553,11 +556,7 @@ func (r *TestingGame) GameStart() {
 			r.GameState.GameState = "早上"
 		}
 	}
-
 	return
-	//r.MonitorCenter.
-	// 2.游戏循环到十回合
-
 }
 
 func NextGameState(str string) string {
