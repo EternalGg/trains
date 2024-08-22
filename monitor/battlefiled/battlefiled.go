@@ -17,6 +17,12 @@ type Position struct {
 	Distance map[int]int // 距离
 }
 
+type PositionStr struct {
+	Id      string
+	HeroId  string
+	Machine string
+}
+
 func NormalGame() *BattleFiled {
 	f := GameMap29(BattleFiled{Positions: map[int]*Position{}})
 	return f

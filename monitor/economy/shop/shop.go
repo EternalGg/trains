@@ -20,6 +20,13 @@ type BaseShop struct {
 	Cards map[int]*Cards
 }
 
+type BaseShopStr struct {
+	CardId string
+	Price  string
+	CD     string
+	BuyCd  string
+}
+
 func ShopInit() (*Shop, *BaseShop) {
 	shop := Shop{Cards: map[int]*Cards{}}
 	baseShop := BaseShop{Cards: map[int]*Cards{}}
