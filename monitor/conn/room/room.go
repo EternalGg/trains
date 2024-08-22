@@ -251,7 +251,7 @@ func (r *TestingGame) GameStart() {
 				switch gs.GameDatatype {
 				case 2:
 					s, gs := ServerSession{}, GameSession{}
-					s.Type = 3
+					s.Type = 10
 					gs.GameDatatype = 2
 					//bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
 					bsstrs := make([]shop.BaseShopStr, 0)
@@ -277,7 +277,7 @@ func (r *TestingGame) GameStart() {
 					// 2 shop
 				case 3:
 					s, gs := ServerSession{}, GameSession{}
-					s.Type = 3
+					s.Type = 11
 					gs.GameDatatype = 3
 					//m := r.MonitorCenter.BattleFiled
 					result := make([]battlefiled.PositionStr, 0)
@@ -305,7 +305,7 @@ func (r *TestingGame) GameStart() {
 					// 3 map
 				case 4:
 					s, gs := ServerSession{}, GameSession{}
-					s.Type = 3
+					s.Type = 12
 					gs.GameDatatype = 4
 					pkg := PKG{
 						r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
@@ -415,7 +415,7 @@ func (r *TestingGame) GameStart() {
 				case 101:
 					// catch ht hero str
 					s, gs := ServerSession{}, GameSession{}
-					s.Type = 3
+					s.Type = 13
 					gs.GameDatatype = 101
 					m := r.HeroStr
 					jm, _ := json.Marshal(m)
@@ -426,7 +426,7 @@ func (r *TestingGame) GameStart() {
 				case 102:
 					// catch ht hero str
 					s, gs := ServerSession{}, GameSession{}
-					s.Type = 3
+					s.Type = 14
 					gs.GameDatatype = 102
 					m := r.SkillsStr
 					jm, _ := json.Marshal(m)
@@ -795,7 +795,7 @@ func (r *TestingGame) GameRoutine() {
 					switch gs.GameDatatype {
 					case 2:
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 10
 						gs.GameDatatype = 2
 						//bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
 						bsstrs := make([]shop.BaseShopStr, 0)
@@ -821,7 +821,7 @@ func (r *TestingGame) GameRoutine() {
 						// 2 shop
 					case 3:
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 11
 						gs.GameDatatype = 3
 						//m := r.MonitorCenter.BattleFiled
 						result := make([]battlefiled.PositionStr, 0)
@@ -849,7 +849,7 @@ func (r *TestingGame) GameRoutine() {
 						// 3 map
 					case 4:
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 12
 						gs.GameDatatype = 4
 						pkg := PKG{
 							r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
@@ -1056,7 +1056,7 @@ func (r *TestingGame) GameRoutine() {
 					case 101:
 						// catch ht hero str
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 13
 						gs.GameDatatype = 101
 						m := r.HeroStr
 						jm, _ := json.Marshal(m)
@@ -1067,7 +1067,7 @@ func (r *TestingGame) GameRoutine() {
 					case 102:
 						// catch ht hero str
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 14
 						gs.GameDatatype = 102
 						m := r.SkillsStr
 						jm, _ := json.Marshal(m)
