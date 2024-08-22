@@ -108,6 +108,11 @@ type (
 		CardId []string
 		TId    []string
 	}
+	CCStr struct {
+		RemainMoney string
+		HeroPoolStr []string
+		ChoseCount  string
+	}
 )
 type (
 	Landing struct {
@@ -194,12 +199,18 @@ func (r *TestingGame) GameStart() {
 					cc.CardPool[id].AreadyChose = true
 					cc.CardPoolStr = HeroListToStrList(cc.CardPool)
 					r.CC = &cc
+
 					r.GameState.Version++
 					cc.ChoseCount++
+					ccstr := CCStr{
+						RemainMoney: strconv.Itoa(r.CC.RemainMoney),
+						HeroPoolStr: r.CC.CardPoolStr,
+						ChoseCount:  strconv.Itoa(r.CC.ChoseCount),
+					}
 
 					s := ServerSession{}
 					s.Type = 3
-					jss, _ := json.Marshal(cc)
+					jss, _ := json.Marshal(ccstr)
 					s.Data = string(jss)
 					r.ChOut <- &s
 				} else {
