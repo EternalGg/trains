@@ -295,7 +295,7 @@ func (r *TestingGame) GameStart() {
 				case 4:
 					s, gs := ServerSession{}, GameSession{}
 					s.Type = 3
-					gs.GameDatatype = 5
+					gs.GameDatatype = 4
 					pkg := PKG{
 						r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
 						r.MonitorCenter.Economy[r.Gamer.ID].Money,
@@ -326,7 +326,7 @@ func (r *TestingGame) GameStart() {
 					n := notice.ActionToNotice([]notice.ActionData{*te}, "结束回合", 10)
 					s, gs := ServerSession{}, GameSession{}
 					s.Type = 3
-					gs.GameDatatype = 7
+					gs.GameDatatype = 5
 					jn, _ := json.Marshal(n)
 					gs.GameData = string(jn)
 					jgs, _ := json.Marshal(gs)
@@ -362,7 +362,7 @@ func (r *TestingGame) GameStart() {
 							n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
 							s, gs := ServerSession{}, GameSession{}
 							s.Type = 3
-							gs.GameDatatype = 7
+							gs.GameDatatype = 11
 							jn, _ := json.Marshal(n)
 							gs.GameData = string(jn)
 							jgs, _ := json.Marshal(gs)
@@ -380,7 +380,7 @@ func (r *TestingGame) GameStart() {
 						n := notice.ActionToNotice([]notice.ActionData{*sale}, "出售卡牌", 3)
 						s, gs := ServerSession{}, GameSession{}
 						s.Type = 3
-						gs.GameDatatype = 7
+						gs.GameDatatype = 12
 						jsale, _ := json.Marshal(n)
 						gs.GameData = string(jsale)
 						jgs, _ := json.Marshal(gs)
@@ -394,7 +394,7 @@ func (r *TestingGame) GameStart() {
 						r.GameState.Version++
 						s, gs := ServerSession{}, GameSession{}
 						s.Type = 3
-						gs.GameDatatype = 7
+						gs.GameDatatype = 12
 						jbuy, _ := json.Marshal(n)
 						gs.GameData = string(jbuy)
 						jgs, _ := json.Marshal(gs)
@@ -405,7 +405,7 @@ func (r *TestingGame) GameStart() {
 					// catch ht hero str
 					s, gs := ServerSession{}, GameSession{}
 					s.Type = 3
-					gs.GameDatatype = 8
+					gs.GameDatatype = 101
 					m := r.HeroStr
 					jm, _ := json.Marshal(m)
 					gs.GameData = string(jm)
@@ -416,7 +416,7 @@ func (r *TestingGame) GameStart() {
 					// catch ht hero str
 					s, gs := ServerSession{}, GameSession{}
 					s.Type = 3
-					gs.GameDatatype = 8
+					gs.GameDatatype = 102
 					m := r.SkillsStr
 					jm, _ := json.Marshal(m)
 					gs.GameData = string(jm)
@@ -839,7 +839,7 @@ func (r *TestingGame) GameRoutine() {
 					case 4:
 						s, gs := ServerSession{}, GameSession{}
 						s.Type = 3
-						gs.GameDatatype = 5
+						gs.GameDatatype = 4
 						pkg := PKG{
 							r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
 							r.MonitorCenter.Economy[r.Gamer.ID].Money,
