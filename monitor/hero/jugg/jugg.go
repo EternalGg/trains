@@ -13,7 +13,7 @@ func JuggHeroInit() *hero.Hero {
 		Health:      16,
 		THealth:     16,
 		Name:        "主宰",
-		AttackPoint: 6,
+		AttackPoint: 8,
 		Price:       800,
 		ActionPoint: 1,
 

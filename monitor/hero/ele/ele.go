@@ -18,7 +18,7 @@ func EleHeroInit() *hero.Hero {
 		Price:          450,
 		ActionPoint:    1,
 		AreadyChose:    false,
-		Speed:          12,
+		Speed:          8,
 		PositiveSkills: []int{1, 5, 3, 4},
 	}
 	return &Ele

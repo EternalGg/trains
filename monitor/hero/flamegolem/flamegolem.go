@@ -17,7 +17,7 @@ func FlameGolemHeroInit() *hero.Hero {
 		Price:       450,
 		ActionPoint: 1,
 
-		Speed:          10,
+		Speed:          7,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &FlameGolem

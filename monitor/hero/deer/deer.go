@@ -16,7 +16,7 @@ func DeerHeroInit() *hero.Hero {
 		AttackPoint:    1,
 		ActionPoint:    1,
 		Price:          150,
-		Speed:          8,
+		Speed:          6,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Deer

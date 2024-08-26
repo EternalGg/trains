@@ -2,6 +2,8 @@ package room
 
 import (
 	"encoding/json"
+	"fmt"
+	"sort"
 	"strconv"
 	"time"
 	mc "train/monitor"
@@ -37,6 +39,7 @@ type (
 		HT            *HeroTurn
 		HeroStr       string
 		SkillsStr     string
+		SelectableStr string
 	}
 	Gamer struct {
 		ID          int
@@ -58,6 +61,7 @@ type (
 		Version   int    //信息版本
 		Time      int    //时间
 		GameState string //游戏时间状态
+		//TimeState string //游戏时区
 	}
 	// 从客户端发来的session
 	GameSession struct {
@@ -93,8 +97,8 @@ type (
 
 type (
 	SkillStr struct {
-		Skill        string // skill struct
-		Selectable   string // cut SelectableStr list
+		Skill string // skill struct
+		//Selectable   string // cut SelectableStr list
 		Available    string // 是否可用
 		NotAvailable string // cut string list t or f
 	}
@@ -112,6 +116,11 @@ type (
 		RemainMoney string
 		HeroPoolStr []string
 		ChoseCount  string
+	}
+	HeroTimeQueue struct {
+		HeroId    []string
+		HeroTid   []string
+		HeroSpeed []string
 	}
 )
 type (
@@ -219,12 +228,6 @@ func (r *TestingGame) GameStart() {
 
 			} else {
 			}
-			//s, gs := ServerSession{}, GameSession{}
-			//s.Type = 3
-			//gs.GameDatatype = 1
-			//jgs, _ := json.Marshal(gs)
-			//s.Data = string(jgs)
-			//r.ChOut <- &s
 		}
 	}
 	r.MonitorCenter.Economy[r.Gamer.ID].ChoseBefore(cc.CardPool)
@@ -331,6 +334,8 @@ func (r *TestingGame) GameStart() {
 				case 5:
 					//结束该回合
 					r.GameState.GameState = NextGameState(r.GameState.GameState)
+					//r.GameState.TimeState = NextGameState(r.GameState.TimeState)
+					fmt.Println(r.GameState.GameState)
 					te := notice.TurnEndResultMade(true, 0)
 					r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, te)
 
@@ -427,20 +432,28 @@ func (r *TestingGame) GameStart() {
 					// catch ht hero str
 					s, gs := ServerSession{}, GameSession{}
 					s.Type = 14
-					gs.GameDatatype = 102
 					m := r.SkillsStr
 					jm, _ := json.Marshal(m)
 					gs.GameData = string(jm)
 					jgs, _ := json.Marshal(gs)
 					s.Data = string(jgs)
 					r.ChOut <- &s
+				case 103:
+					s, gs := ServerSession{}, GameSession{}
+					s.Type = 15
+					m := FHeroTimeQueue(r.MonitorCenter)
+					gs.GameData = m
+					jgs, _ := json.Marshal(gs)
+					s.Data = string(jgs)
+					r.ChOut <- &s
 				}
 			}
 		} else {
-			for r.GameState.GameState == "早上routine" || r.GameState.GameState == "中午routine" || r.GameState.GameState == "傍晚routine" {
-				r.GameRoutine()
-			}
-			r.GameState.GameState = NextGameState(r.GameState.GameState)
+			beforeTime := r.GameState.GameState
+			r.GameRoutine()
+			fmt.Println(r.GameState.GameState)
+			r.GameState.GameState = NextGameState(beforeTime)
+			fmt.Println(r.GameState.GameState)
 		}
 		// next function
 
@@ -486,83 +499,94 @@ func (t *TestingGame) FindSelected(skill *skills2.Skill, remainMoney int, h *her
 		if t.MonitorCenter.BattleFiled.Positions[i] != nil {
 			//fmt.Println(skill.Owner.Pos)
 			//fmt.Println(t.MonitorCenter.BattleFiled.Positions[skill.Owner.Pos].Distance[i])
-			if t.MonitorCenter.BattleFiled.Positions[skill.Owner.Pos].Distance[i] <= skill.Distance {
+			if t.MonitorCenter.BattleFiled.Positions[t.MonitorCenter.HeroMap[skill.OwnerId].Pos].Distance[i] <= skill.Distance {
 				pos = append(pos, t.MonitorCenter.BattleFiled.Positions[i])
 			}
 		}
 	}
 	// 筛选
-	for _, target := range skill.Targets {
-		//0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 有物品的地形
-		switch target {
-		case 0:
-			for _, p := range pos {
-				if p.Hero != nil {
-					if p.Hero.Owner == skill.Owner.Owner && p.Hero != skill.Owner {
-						selected.Unit = append(selected.Unit, p.Hero)
-					}
-				}
-				if p.Machine != nil {
-					if p.Machine.Owner == skill.Owner.Owner && p.Machine != skill.Owner {
-						selected.Unit = append(selected.Unit, p.Machine)
-					}
+
+	if skill.TargetTeamMate {
+		for _, p := range pos {
+			if p.Hero != nil {
+				if p.Hero.Owner == t.MonitorCenter.HeroMap[skill.OwnerId].Owner && p.Hero != t.MonitorCenter.HeroMap[skill.OwnerId] {
+					selected.Unit = append(selected.Unit, p.Hero)
 				}
 			}
-		case 1:
-			for _, p := range pos {
-				if p.Hero != nil {
-					if p.Hero.Owner != skill.Owner.Owner && p.Hero.Owner != 2 {
-						selected.Unit = append(selected.Unit, p.Hero)
-					}
-				}
-				if p.Machine != nil {
-					if p.Machine.Owner != skill.Owner.Owner && p.Machine.Owner != 2 {
-						selected.Unit = append(selected.Unit, p.Machine)
-					}
-				}
-			}
-		case 2:
-			for _, p := range pos {
-				if p.Hero != nil {
-					if p.Hero.Owner == 2 {
-						selected.Unit = append(selected.Unit, p.Hero)
-					}
-				}
-				if p.Machine != nil {
-					if p.Machine.Owner == 2 {
-						selected.Unit = append(selected.Unit, p.Machine)
-					}
-				}
-			}
-		case 3:
-			// 自己
-			selected.Unit = append(selected.Unit, skill.Owner)
-		case 4:
-			for _, p := range pos {
-				if p.Hero == nil {
-					selected.Pos = append(selected.Pos, p.Id)
-				}
-			}
-		case 5:
-			for _, p := range pos {
-				if p.Machine == nil {
-					selected.Pos = append(selected.Pos, p.Id)
-				}
-			}
-		case 6:
-			for _, p := range pos {
-				if p.Hero != nil {
-					selected.Pos = append(selected.Pos, p.Id)
-				}
-			}
-		case 7:
-			for _, p := range pos {
-				if p.Machine != nil {
-					selected.Pos = append(selected.Pos, p.Id)
+			if p.Machine != nil {
+				if p.Machine.Owner == t.MonitorCenter.HeroMap[skill.OwnerId].Owner && p.Machine != t.MonitorCenter.HeroMap[skill.OwnerId] {
+					selected.Unit = append(selected.Unit, p.Machine)
 				}
 			}
 		}
 	}
+
+	if skill.TargetEnemy {
+		for _, p := range pos {
+			if p.Hero != nil {
+				if p.Hero.Owner != t.MonitorCenter.HeroMap[skill.OwnerId].Owner && p.Hero.Owner != 2 {
+					selected.Unit = append(selected.Unit, p.Hero)
+				}
+			}
+			if p.Machine != nil {
+				if p.Machine.Owner != t.MonitorCenter.HeroMap[skill.OwnerId].Owner && p.Machine.Owner != 2 {
+					selected.Unit = append(selected.Unit, p.Machine)
+				}
+			}
+		}
+	}
+
+	if skill.TargetMiddle {
+		for _, p := range pos {
+			if p.Hero != nil {
+				if p.Hero.Owner == 2 {
+					selected.Unit = append(selected.Unit, p.Hero)
+				}
+			}
+			if p.Machine != nil {
+				if p.Machine.Owner == 2 {
+					selected.Unit = append(selected.Unit, p.Machine)
+				}
+			}
+		}
+	}
+
+	if skill.TargetSelf {
+		selected.Unit = append(selected.Unit, t.MonitorCenter.HeroMap[skill.OwnerId])
+	}
+
+	if skill.TargetNoUnitPos {
+		for _, p := range pos {
+			if p.Hero == nil {
+				selected.Pos = append(selected.Pos, p.Id)
+			}
+		}
+	}
+
+	if skill.TargetNoMachinePos {
+		for _, p := range pos {
+			if p.Machine == nil {
+				selected.Pos = append(selected.Pos, p.Id)
+			}
+		}
+	}
+
+	if skill.TargetUnitedPos {
+		for _, p := range pos {
+			if p.Hero != nil {
+				selected.Pos = append(selected.Pos, p.Id)
+			}
+		}
+	}
+
+	if skill.TargetMachinePos {
+		for _, p := range pos {
+			if p.Machine != nil {
+				selected.Pos = append(selected.Pos, p.Id)
+			}
+		}
+	}
+
 	result.Selectable.SelectPoint = len(selected.Unit) + len(selected.Pos)
 	// 判断技能目标是否足够，不足而且不能无目标释放 A = false
 	if selected.SelectPoint == 0 {
@@ -591,7 +615,7 @@ func (r *TestingGame) SkillsDynamicUpdates(h *hero.Hero) *HeroTurn {
 	var skills []*Skill
 	for _, i2 := range skillsIdList {
 		skill := skills2.StrToSkills(monitorfile.SkillsIntToStrMap(i2))
-		skill.Owner = ht.Hero
+		r.MonitorCenter.HeroMap[skill.OwnerId] = ht.Hero
 		// skill selected unit/position calculate
 		s := r.FindSelected(skill, r.MonitorCenter.Economy[r.Gamer.ID].Money, h)
 		//fmt.Print(s.Skill, s.Selectable.SelectPoint)
@@ -762,342 +786,376 @@ func (r TestingGame) FindHerosByDistanceWithOutSelf(h *hero.Hero, distance int) 
 
 // 游戏routinue
 func (r *TestingGame) GameRoutine() {
-	for len(r.MonitorCenter.Time.Actions) != 0 {
-		// 速度排序
-		// 判断事件是否结束 v1 object is dead? v2 target is dead?
-		// 时序问题 monitor first ---- monitor speed?
-		// hero secend ---- 充钱-speed random
-		if !(r.MonitorCenter.Time.Actions[0].HeroAction) {
-			// 定时被动
-		} else {
-			// 当前英雄结束
-			end := false
-			nowHero := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
-			if nowHero == nil {
-				break
-			}
-			nowHero.TActionPoint = nowHero.ActionPoint
-			HT := r.SkillsDynamicUpdates(nowHero)
-			r.HT = HT
-			r.GameState.GameState = nowHero.Name + "行动回合！"
-			r.HeroStr = HeroStrInit(r.HT)
-			r.SkillsStr = HeroSkillStrInit(r.HT)
-			// hero turn send to client
-			for !end {
-				select {
-				// 判断skill的Available 如果==true
-				// 如果存在 查询目标是否在selected中
-				// 如果可以释放 两个判断结束 资源扣除后释放技能
-				case heroTurn := <-r.Ch:
-					//fmt.Println(heroTurn.Type, heroTurn.Data)
-					gs := GameSession{}
-					json.Unmarshal([]byte(heroTurn.Data), &gs)
-					switch gs.GameDatatype {
-					case 2:
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 10
-						gs.GameDatatype = 2
-						//bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
-						bsstrs := make([]shop.BaseShopStr, 0)
-						for _, v := range r.MonitorCenter.Economy[r.Gamer.ID].BaseShop.Cards {
-							bsstr := shop.BaseShopStr{
-								CardId: "",
-								Price:  "",
-								CD:     "",
-								BuyCd:  "",
-							}
-							bsstr.Price = strconv.Itoa(v.Hero.Price)
-							bsstr.CardId = strconv.Itoa(v.Hero.Id)
-							bsstr.BuyCd = strconv.Itoa(v.BuyCd)
-							bsstr.CD = strconv.Itoa(v.CD)
-							bsstrs = append(bsstrs, bsstr)
-						}
-						jbs, _ := json.Marshal(bsstrs)
-						gs.GameData = string(jbs)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
+	//fmt.Println("routine coming!")
+	for i := 0; i <= 12; i++ {
+		fmt.Println(r.MonitorCenter.Time.Time.Round, i)
+		//for k, v := range r.MonitorCenter.HeroMap {
+		//	fmt.Println(k, v)
+		//}
+		//for h, i2 := range r.MonitorCenter.Time.Time.HeroTime {
+		//	fmt.Println(h, i2)
+		//}
+		for len(r.MonitorCenter.Time.Actions) != 0 {
+			// 速度排序
+			// 判断事件是否结束 v1 object is dead? v2 target is dead?
+			// 时序问题 monitor first ---- monitor speed?
+			// hero secend ---- 充钱-speed random
 
-						// 2 shop
-					case 3:
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 11
-						gs.GameDatatype = 3
-						//m := r.MonitorCenter.BattleFiled
-						result := make([]battlefiled.PositionStr, 0)
-						for _, v := range r.MonitorCenter.BattleFiled.Positions {
-							s := battlefiled.PositionStr{
-								Id:      "",
-								HeroId:  "",
-								Machine: "",
+			if !(r.MonitorCenter.Time.Actions[0].HeroAction) {
+				// 定时被动
+			} else {
+				// 当前英雄结束
+				end := false
+				//fmt.Println(r.MonitorCenter.HeroMap, r.MonitorCenter.Time.Actions)
+				nowHero := r.MonitorCenter.HeroMap[r.MonitorCenter.Time.Actions[0].HID]
+				//fmt.Println(nowHero)
+				if nowHero == nil {
+					break
+				}
+				nowHero.TActionPoint = nowHero.ActionPoint
+				HT := r.SkillsDynamicUpdates(nowHero)
+				r.HT = HT
+				r.GameState.GameState = nowHero.Name + "行动回合！"
+				r.HeroStr = HeroStrInit(r.HT)
+				r.SkillsStr = HeroSkillStrInit(r.HT)
+				r.SelectableStr = SkillSasStrInit(r.HT)
+				// hero turn send to client
+				for !end {
+					//fmt.Println("zzz")
+					select {
+					// 判断skill的Available 如果==true
+					// 如果存在 查询目标是否在selected中
+					// 如果可以释放 两个判断结束 资源扣除后释放技能
+					case heroTurn := <-r.Ch:
+						//fmt.Println(heroTurn.Type, heroTurn.Data)
+						gs := GameSession{}
+						json.Unmarshal([]byte(heroTurn.Data), &gs)
+						switch gs.GameDatatype {
+						case 2:
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 10
+							gs.GameDatatype = 2
+							//bs := r.MonitorCenter.Economy[r.Gamer.ID].BaseShop
+							bsstrs := make([]shop.BaseShopStr, 0)
+							for _, v := range r.MonitorCenter.Economy[r.Gamer.ID].BaseShop.Cards {
+								bsstr := shop.BaseShopStr{
+									CardId: "",
+									Price:  "",
+									CD:     "",
+									BuyCd:  "",
+								}
+								bsstr.Price = strconv.Itoa(v.Hero.Price)
+								bsstr.CardId = strconv.Itoa(v.Hero.Id)
+								bsstr.BuyCd = strconv.Itoa(v.BuyCd)
+								bsstr.CD = strconv.Itoa(v.CD)
+								bsstrs = append(bsstrs, bsstr)
 							}
-							s.Id = strconv.Itoa(v.Id)
-							if v.Hero != nil {
-								s.HeroId = strconv.Itoa(v.Hero.Tid)
+							jbs, _ := json.Marshal(bsstrs)
+							gs.GameData = string(jbs)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+
+							// 2 shop
+						case 3:
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 11
+							gs.GameDatatype = 3
+							//m := r.MonitorCenter.BattleFiled
+							result := make([]battlefiled.PositionStr, 0)
+							for _, v := range r.MonitorCenter.BattleFiled.Positions {
+								s := battlefiled.PositionStr{
+									Id:      "",
+									HeroId:  "",
+									Machine: "",
+								}
+								s.Id = strconv.Itoa(v.Id)
+								if v.Hero != nil {
+									s.HeroId = strconv.Itoa(v.Hero.Tid)
+								}
+								if v.Machine != nil {
+									s.Machine = strconv.Itoa(v.Machine.Tid)
+								}
+								result = append(result, s)
 							}
-							if v.Machine != nil {
-								s.Machine = strconv.Itoa(v.Machine.Tid)
+							jm, _ := json.Marshal(result)
+							gs.GameData = string(jm)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+							// 4 resource
+							// 3 map
+						case 4:
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 12
+							gs.GameDatatype = 4
+							pkg := PKG{
+								r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
+								r.MonitorCenter.Economy[r.Gamer.ID].Money,
 							}
-							result = append(result, s)
-						}
-						jm, _ := json.Marshal(result)
-						gs.GameData = string(jm)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
+
+							pkgStr := PKGStr{
+								Money:  strconv.Itoa(pkg.Money),
+								CardId: make([]string, 0),
+								TId:    make([]string, 0),
+							}
+							for _, v := range pkg.CardsPkg {
+								pkgStr.TId = append(pkgStr.TId, strconv.Itoa(v.Hero.Tid))
+								pkgStr.CardId = append(pkgStr.CardId, strconv.Itoa(v.Hero.Id))
+							}
+
+							jpkg, _ := json.Marshal(pkgStr)
+							gs.GameData = string(jpkg)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
 						// 4 resource
-						// 3 map
-					case 4:
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 12
-						gs.GameDatatype = 4
-						pkg := PKG{
-							r.MonitorCenter.Economy[r.Gamer.ID].CardsPkg,
-							r.MonitorCenter.Economy[r.Gamer.ID].Money,
-						}
+						// 4 resource
 
-						pkgStr := PKGStr{
-							Money:  strconv.Itoa(pkg.Money),
-							CardId: make([]string, 0),
-							TId:    make([]string, 0),
-						}
-						for _, v := range pkg.CardsPkg {
-							pkgStr.TId = append(pkgStr.TId, strconv.Itoa(v.Hero.Tid))
-							pkgStr.CardId = append(pkgStr.CardId, strconv.Itoa(v.Hero.Id))
-						}
+						case 10:
 
-						jpkg, _ := json.Marshal(pkgStr)
-						gs.GameData = string(jpkg)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
-					// 4 resource
-					// 4 resource
+							move := Move{}
+							json.Unmarshal([]byte(gs.GameData), &move)
+							no := &notice.Notice{}
+							var state int
+							var skill *Skill
 
-					case 10:
-
-						move := Move{}
-						json.Unmarshal([]byte(gs.GameData), &move)
-						no := &notice.Notice{}
-						var state int
-						var skill *Skill
-
-						state, skill = r.SkillJudgeAndReduce(HT, move.TargetId, move.SkillId)
-						monitors := []*monitors2.Monitor{}
-						for _, i2 := range r.MonitorCenter.MonitorMap {
-							monitors = append(monitors, i2)
-						}
-						if state == 0 {
-							var h *hero.Hero
-							var pos int
-							if !skill.Skill.NoTarget {
-								h, pos = skill.FindTarget(move.TargetId)
+							state, skill = r.SkillJudgeAndReduce(HT, move.TargetId, move.SkillId)
+							monitors := []*monitors2.Monitor{}
+							for _, i2 := range r.MonitorCenter.MonitorMap {
+								monitors = append(monitors, i2)
 							}
-							switch state {
-							case 1:
-							case 2:
-							case 3:
-							default:
-								switch skill.Skill.Id {
+							if state == 0 {
+								var h *hero.Hero
+								var pos int
+								if !skill.Skill.NoTarget {
+									h, pos = skill.FindTarget(move.TargetId)
+								}
+								switch state {
 								case 1:
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-									l := len(r.MonitorCenter.MonitorLogs)
-									attack := attack.Attack{
-										Name:     "Attack",
-										Attacker: nowHero,
-										Targets:  h,
-										Damage:   0,
-										Mc:       r.MonitorCenter,
-									}
-									routines.Gates(attack, r.MonitorCenter)
-									no = r.LogToNotice(l)
-									HT = r.SkillsDynamicUpdates(nowHero)
-									r.HT = HT
 								case 2:
-									// 移动
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-									move := r.MonitorCenter.BattleFiled.HeroMove(
-										r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
-										r.MonitorCenter.BattleFiled.Positions[pos],
-										nowHero)
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
-									l := len(r.MonitorCenter.MonitorLogs)
-									no = r.LogToNotice(l)
-									HT = r.SkillsDynamicUpdates(nowHero)
-									r.HT = HT
 								case 3:
-								case 4:
-									// 早上回合结束
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-
-									n := notice.TurnEndResultMade(true, 0)
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, n)
-									r.MonitorCenter.TurnEndListen(nowHero)
-									// 检测turnend里需要end的monitor
-
-									l := len(r.MonitorCenter.MonitorLogs)
-									no = r.LogToNotice(l)
-									end = true
-								case 5:
-									// 野兽冲击
-
-									// 对周围的所有单位造成1点攻击
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-									l := len(r.MonitorCenter.MonitorLogs)
-
-									// 对周围的所有单位造成1点攻击
-									hs := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
-									gh := &monitors2.Monitor{}
-									for _, monitor := range monitors {
-										if monitor.MID == monitorfile.MonitorIdMap("巨型食草动物") {
-											gh = monitor
-										}
-									}
-									for _, h := range hs {
-
-										a := attack.Attack{
-											Name:     "移动攻击",
-											Attacker: nowHero,
-											Targets:  h,
-											Damage:   1,
-											Mc:       r.MonitorCenter,
-										}
-										if gh.LifeTime == 1 {
-											a.Damage = 2
-										}
-										routines.Gates(a, r.MonitorCenter)
-									}
-									// move
-									move := r.MonitorCenter.BattleFiled.HeroMove(
-										r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
-										r.MonitorCenter.BattleFiled.Positions[pos],
-										nowHero)
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
-									// 对周围的所有单位造成1点攻击
-									hs2 := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
-									for _, h := range hs2 {
-										a := attack.Attack{
-											Name:     "移动攻击",
-											Attacker: nowHero,
-											Targets:  h,
-											Damage:   1,
-											Mc:       r.MonitorCenter,
-										}
-										if gh.LifeTime == 1 {
-											a.Damage = 2
-										}
-										routines.Gates(a, r.MonitorCenter)
-									}
-
-									no = r.LogToNotice(l)
-									HT = r.SkillsDynamicUpdates(nowHero)
-									r.HT = HT
-								case 6:
-									// 撞击
-									// move
-									// 随机攻击附近一个敌方单位
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-									l := len(r.MonitorCenter.MonitorLogs)
-									// move
-									move := r.MonitorCenter.BattleFiled.HeroMove(
-										r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
-										r.MonitorCenter.BattleFiled.Positions[pos],
-										nowHero)
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
-									hs := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
-									//attack
-									if len(hs) != 0 {
-										t := mc.RandomNumber(len(hs))
+								default:
+									switch skill.Skill.Id {
+									case 1:
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+										l := len(r.MonitorCenter.MonitorLogs)
 										attack := attack.Attack{
-											Name:     "巨兽冲击",
+											Name:     "Attack",
 											Attacker: nowHero,
-											Targets:  hs[t],
-											Damage:   nowHero.AttackPoint + (nowHero.AttackPoint / 2),
+											Targets:  h,
+											Damage:   0,
 											Mc:       r.MonitorCenter,
 										}
 										routines.Gates(attack, r.MonitorCenter)
+										no = r.LogToNotice(l)
+										HT = r.SkillsDynamicUpdates(nowHero)
+										r.HT = HT
+									case 2:
+										// 移动
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+										move := r.MonitorCenter.BattleFiled.HeroMove(
+											r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
+											r.MonitorCenter.BattleFiled.Positions[pos],
+											nowHero)
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
+										l := len(r.MonitorCenter.MonitorLogs)
+										no = r.LogToNotice(l)
+										HT = r.SkillsDynamicUpdates(nowHero)
+										r.HT = HT
+									case 3:
+									case 4:
+										// 早上回合结束
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+
+										n := notice.TurnEndResultMade(true, 0)
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, n)
+										r.MonitorCenter.TurnEndListen(nowHero)
+										// 检测turnend里需要end的monitor
+
+										l := len(r.MonitorCenter.MonitorLogs)
+										no = r.LogToNotice(l)
+										end = true
+									case 5:
+										// 野兽冲击
+
+										// 对周围的所有单位造成1点攻击
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+										l := len(r.MonitorCenter.MonitorLogs)
+
+										// 对周围的所有单位造成1点攻击
+										hs := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
+										gh := &monitors2.Monitor{}
+										for _, monitor := range monitors {
+											if monitor.MID == monitorfile.MonitorIdMap("巨型食草动物") {
+												gh = monitor
+											}
+										}
+										for _, h := range hs {
+
+											a := attack.Attack{
+												Name:     "移动攻击",
+												Attacker: nowHero,
+												Targets:  h,
+												Damage:   1,
+												Mc:       r.MonitorCenter,
+											}
+											if gh.LifeTime == 1 {
+												a.Damage = 2
+											}
+											routines.Gates(a, r.MonitorCenter)
+										}
+										// move
+										move := r.MonitorCenter.BattleFiled.HeroMove(
+											r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
+											r.MonitorCenter.BattleFiled.Positions[pos],
+											nowHero)
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
+										// 对周围的所有单位造成1点攻击
+										hs2 := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
+										for _, h := range hs2 {
+											a := attack.Attack{
+												Name:     "移动攻击",
+												Attacker: nowHero,
+												Targets:  h,
+												Damage:   1,
+												Mc:       r.MonitorCenter,
+											}
+											if gh.LifeTime == 1 {
+												a.Damage = 2
+											}
+											routines.Gates(a, r.MonitorCenter)
+										}
+
+										no = r.LogToNotice(l)
+										HT = r.SkillsDynamicUpdates(nowHero)
+										r.HT = HT
+									case 6:
+										// 撞击
+										// move
+										// 随机攻击附近一个敌方单位
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+										l := len(r.MonitorCenter.MonitorLogs)
+										// move
+										move := r.MonitorCenter.BattleFiled.HeroMove(
+											r.MonitorCenter.BattleFiled.Positions[nowHero.Pos],
+											r.MonitorCenter.BattleFiled.Positions[pos],
+											nowHero)
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, move)
+										hs := r.FindHerosByDistanceWithOutSelf(nowHero, 1)
+										//attack
+										if len(hs) != 0 {
+											t := mc.RandomNumber(len(hs))
+											attack := attack.Attack{
+												Name:     "巨兽冲击",
+												Attacker: nowHero,
+												Targets:  hs[t],
+												Damage:   nowHero.AttackPoint + (nowHero.AttackPoint / 2),
+												Mc:       r.MonitorCenter,
+											}
+											routines.Gates(attack, r.MonitorCenter)
+										}
+
+										no = r.LogToNotice(l)
+										HT = r.SkillsDynamicUpdates(nowHero)
+										r.HT = HT
+									case 7:
+										r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+										l := len(r.MonitorCenter.MonitorLogs)
+										// healing
+										randomHealing := mc.RandomNumber(9)
+										healingMap := map[int]int{}
+										healingMap[monitorfile.BubbleIdMap("加血")] = randomHealing
+										attr := attribute.Attribute{
+											Hero:    h,
+											AttrMap: healingMap,
+										}
+										attr.Publish()
+										no = r.LogToNotice(l)
+										HT = r.SkillsDynamicUpdates(nowHero)
+										r.HT = HT
 									}
 
-									no = r.LogToNotice(l)
-									HT = r.SkillsDynamicUpdates(nowHero)
-									r.HT = HT
-								case 7:
-									r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-									l := len(r.MonitorCenter.MonitorLogs)
-									// healing
-									randomHealing := mc.RandomNumber(9)
-									healingMap := map[int]int{}
-									healingMap[monitorfile.BubbleIdMap("加血")] = randomHealing
-									attr := attribute.Attribute{
-										Hero:    h,
-										AttrMap: healingMap,
-									}
-									attr.Publish()
-									no = r.LogToNotice(l)
-									HT = r.SkillsDynamicUpdates(nowHero)
-									r.HT = HT
+									// htstr update
+									r.HeroStr = HeroStrInit(r.HT)
+									r.SkillsStr = HeroSkillStrInit(r.HT)
+									r.SelectableStr = SkillSasStrInit(r.HT)
+									r.GameState.Version++
 								}
-
-								// htstr update
-								r.HeroStr = HeroStrInit(r.HT)
-								r.SkillsStr = HeroSkillStrInit(r.HT)
-								r.GameState.Version++
 							}
-						}
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
-						gs.GameDatatype = 7
-						jsale, _ := json.Marshal(no)
-						gs.GameData = string(jsale)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 3
+							gs.GameDatatype = 7
+							jsale, _ := json.Marshal(no)
+							gs.GameData = string(jsale)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
 
-					case 101:
-						// catch ht hero str
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 13
-						gs.GameDatatype = 101
-						m := r.HeroStr
-						jm, _ := json.Marshal(m)
-						gs.GameData = string(jm)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
-					case 102:
-						// catch ht hero str
-						s, gs := ServerSession{}, GameSession{}
-						s.Type = 14
-						gs.GameDatatype = 102
-						m := r.SkillsStr
-						jm, _ := json.Marshal(m)
-						gs.GameData = string(jm)
-						jgs, _ := json.Marshal(gs)
-						s.Data = string(jgs)
-						r.ChOut <- &s
+						case 101:
+							// catch ht hero str
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 13
+							gs.GameDatatype = 101
+							m := r.HeroStr
+							jm, _ := json.Marshal(m)
+							gs.GameData = string(jm)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+						case 102:
+							// catch ht hero str
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 14
+							m := r.SkillsStr
+							jm, _ := json.Marshal(m)
+							gs.GameData = string(jm)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+						case 103:
+							s, gs := ServerSession{}, GameSession{}
+							s.Type = 15
+
+							m := FHeroTimeQueue(r.MonitorCenter)
+							gs.GameData = m
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+						case 104:
+							s, gs := ServerSession{}, GameSession{}
+							gs.GameDatatype = 104
+							m := r.SelectableStr
+							jm, _ := json.Marshal(m)
+							gs.GameData = string(jm)
+							jgs, _ := json.Marshal(gs)
+							s.Data = string(jgs)
+							r.ChOut <- &s
+						}
 					}
 				}
+				// 回归 action point
 			}
-			// 回归 action point
+			r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
 		}
-		r.MonitorCenter.Time.Actions = r.MonitorCenter.Time.Actions[1:]
+		// round past check
+		no := &notice.Notice{}
+		r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
+		l := len(r.MonitorCenter.MonitorLogs)
+		no = r.LogToNotice(l)
+		r.MonitorCenter.RoundPast()
+		if no != nil {
+			s, gs := ServerSession{}, GameSession{}
+			s.Type = 3
+			gs.GameDatatype = 7
+			jsale, _ := json.Marshal(no)
+			gs.GameData = string(jsale)
+			jgs, _ := json.Marshal(gs)
+			s.Data = string(jgs)
+			r.ChOut <- &s
+		}
 	}
-	// round past check
-	no := &notice.Notice{}
-	r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, notice.ActionStart())
-	l := len(r.MonitorCenter.MonitorLogs)
-	r.MonitorCenter.RoundPast()
-	no = r.LogToNotice(l)
-	if no != nil {
-		s, gs := ServerSession{}, GameSession{}
-		s.Type = 3
-		gs.GameDatatype = 7
-		jsale, _ := json.Marshal(no)
-		gs.GameData = string(jsale)
-		jgs, _ := json.Marshal(gs)
-		s.Data = string(jgs)
-		r.ChOut <- &s
-	}
+	//fmt.Println("end")
 }
 
 func HeroListToStrList(heros []*hero.Hero) []string {
@@ -1118,11 +1176,10 @@ func HeroStrInit(ht *HeroTurn) string {
 
 func HeroSkillStrInit(ht *HeroTurn) string {
 	// skills
-	skillstrlist := make([]string, 0)
+	skillstrlist := make([]SkillStr, 0)
 	for i := 0; i < len(ht.Skills); i++ {
 		ss := SkillStr{
 			Skill:        "",
-			Selectable:   "",
 			Available:    "",
 			NotAvailable: "",
 		}
@@ -1137,6 +1194,16 @@ func HeroSkillStrInit(ht *HeroTurn) string {
 		// 3 skill
 		skilljson, _ := json.Marshal(ht.Skills[i].Skill)
 		ss.Skill = string(skilljson)
+		skillstrlist = append(skillstrlist, ss)
+	}
+
+	result, _ := json.Marshal(skillstrlist)
+	return string(result)
+}
+
+func SkillSasStrInit(ht *HeroTurn) string {
+	result := make([]string, 0)
+	for i := 0; i < len(ht.Skills); i++ {
 		// 4
 		SAS := SelectableStr{
 			Unit:   "",
@@ -1159,15 +1226,9 @@ func HeroSkillStrInit(ht *HeroTurn) string {
 		SAS.Pos = ListToStrList(posstrlist)
 		// json
 		SASJSon, _ := json.Marshal(SAS)
-		ss.Selectable = string(SASJSon)
-		// end
-		ssjson, _ := json.Marshal(ss)
-		skillstrlist = append(skillstrlist, string(ssjson))
-		//htstr.SkillsStr = append(htstr.SkillsStr, string(ssjson))
+		result = append(result, string(SASJSon))
 	}
-
-	result := ListToStrList(skillstrlist)
-	return result
+	return ListToStrList(result)
 }
 
 func StrToStrList(str string) []string {
@@ -1193,4 +1254,40 @@ func ListToStrList(list []string) string {
 		}
 	}
 	return result
+}
+
+func FHeroTimeQueue(r *mc.MonitorCenter) string {
+	result := HeroTimeQueue{
+		HeroId:    make([]string, 0),
+		HeroTid:   make([]string, 0),
+		HeroSpeed: make([]string, 0),
+	}
+
+	var pairs []struct {
+		Hero  *hero.Hero
+		Value int
+	}
+
+	// 将map的key-value对添加到中间结构中
+	for k, v := range r.Time.Time.HeroTime {
+		pairs = append(pairs, struct {
+			Hero  *hero.Hero
+			Value int
+		}{k, v})
+	}
+
+	// 按照value进行排序
+	sort.Slice(pairs, func(i, j int) bool {
+		return pairs[i].Value < pairs[j].Value
+	})
+
+	// 构建新的map
+	for _, value := range pairs {
+		result.HeroId = append(result.HeroId, strconv.Itoa(value.Hero.Id))
+		result.HeroTid = append(result.HeroTid, strconv.Itoa(value.Hero.Tid))
+		result.HeroSpeed = append(result.HeroSpeed, strconv.Itoa(value.Value))
+	}
+
+	rs, _ := json.Marshal(result)
+	return string(rs)
 }

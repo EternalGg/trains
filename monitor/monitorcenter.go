@@ -93,13 +93,14 @@ func TimeInit() *Time {
 func (t *MonitorCenter) RoundPast() {
 	// hero round
 	heroList := []*hero.Hero{}
-
+	// herotime 每个英雄倒计时-1
 	for h, _ := range t.Time.Time.HeroTime {
 		t.Time.Time.HeroTime[h] -= 1
 		if t.Time.Time.HeroTime[h] == 0 {
 			heroList = append(heroList, h)
 		}
 	}
+	// 英雄list速度排序
 	if len(heroList) != 0 {
 		sort.Slice(heroList, func(i, j int) bool {
 			return heroList[i].Speed < heroList[j].Speed
@@ -116,14 +117,16 @@ func (t *MonitorCenter) RoundPast() {
 	// 英雄速度归位
 	for _, h := range heroList {
 		t.Time.Time.HeroTime[h] = h.Speed
-		fmt.Println(h.Name, h.Speed)
+		//fmt.Println(h.Name, h.Speed)
 	}
 	// time past
 	t.Time.Time.Round++
 	if t.Time.Time.Round%13 == 0 {
 		t.TimeQuantumPast()
 	}
+
 }
+
 func (t *MonitorCenter) TimeQuantumPast() {
 	switch t.Time.Time.Round {
 	case 26:

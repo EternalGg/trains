@@ -18,7 +18,7 @@ func LeopardHeroInit() *hero.Hero {
 		Price:          250,
 		ActionPoint:    2,
 		AreadyChose:    false,
-		Speed:          8,
+		Speed:          6,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &leopard

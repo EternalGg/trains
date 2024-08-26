@@ -17,7 +17,7 @@ func OctopusHeroInit() *hero.Hero {
 		Price:       600,
 		ActionPoint: 1,
 
-		Speed:          12,
+		Speed:          8,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Octopus

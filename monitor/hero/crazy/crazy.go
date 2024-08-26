@@ -17,7 +17,7 @@ func CrazyHeroInit() *hero.Hero {
 		AttackPoint:    2,
 		Price:          600,
 		ActionPoint:    10,
-		Speed:          10,
+		Speed:          7,
 		PositiveSkills: []int{1, 2, 3, 4},
 		AreadyChose:    false,
 	}

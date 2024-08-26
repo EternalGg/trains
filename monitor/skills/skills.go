@@ -1,7 +1,6 @@
 package skills
 
 import (
-	"train/monitor/hero"
 	"train/monitor/monitorfile"
 	"train/monitor/monitors"
 )
@@ -124,14 +123,21 @@ func BeastKing() *monitors.Monitor {
 // cost,unit,money,distance
 type (
 	Skill struct {
-		Id        int        //id
-		Name      string     //名字
-		Owner     *hero.Hero //单位
-		MovePoint int        //行动点数
-		Money     int        //花费金钱
-		Distance  int        //距离
-		Targets   []int      //0 队友 1敌方单位 2中立单位 3自己 4 无单位的地形 5 无物品的地形 6 有单位的地形 7 无物品的地形
-		NoTarget  bool
+		Id                 int    //id
+		Name               string //名字
+		OwnerId            int    //单位
+		MovePoint          int    //行动点数
+		Money              int    //花费金钱
+		Distance           int    //距离
+		TargetTeamMate     bool   //队友
+		TargetEnemy        bool   // 敌人
+		TargetMiddle       bool   // 中立
+		TargetSelf         bool   // 自己
+		TargetNoUnitPos    bool   // 无单位地形
+		TargetNoMachinePos bool   // 无物品地形
+		TargetUnitedPos    bool   // 有单位地形
+		TargetMachinePos   bool   // 有机械地形
+		NoTarget           bool   // 无目标可使用
 	}
 )
 
@@ -159,13 +165,14 @@ func StrToSkills(str string) *Skill {
 // 默认近战攻击
 func Attack() *Skill {
 	att := &Skill{
-		Id:        1,
-		Name:      "攻击",
-		MovePoint: 1,
-		Money:     0,
-		Distance:  1,
-		Targets:   []int{0, 1, 2},
-		NoTarget:  false,
+		Id:           1,
+		Name:         "攻击",
+		MovePoint:    1,
+		Money:        0,
+		Distance:     1,
+		TargetEnemy:  true,
+		TargetMiddle: true,
+		NoTarget:     false,
 	}
 	att.Id = monitorfile.SkillsMap(att.Name)
 	return att
@@ -174,13 +181,13 @@ func Attack() *Skill {
 // 默认移动
 func Move() *Skill {
 	move := &Skill{
-		Id:        2,
-		Name:      "移动",
-		MovePoint: 1,
-		Money:     0,
-		Distance:  1,
-		Targets:   []int{4},
-		NoTarget:  false,
+		Id:              2,
+		Name:            "移动",
+		MovePoint:       1,
+		Money:           0,
+		Distance:        1,
+		TargetNoUnitPos: true,
+		NoTarget:        false,
 	}
 	move.Id = monitorfile.SkillsMap(move.Name)
 	return move
@@ -194,8 +201,8 @@ func Defence() *Skill {
 		MovePoint: 1,
 		Money:     0,
 		Distance:  0,
-		Targets:   []int{},
-		NoTarget:  true,
+
+		NoTarget: true,
 	}
 	defence.Id = monitorfile.SkillsMap(defence.Name)
 	return defence
@@ -216,13 +223,13 @@ func EndHeroTurn() *Skill {
 // 大象移动技能：行动后向距离为1的英雄单位造成1点伤害
 func CrushMove() *Skill {
 	end := &Skill{
-		Id:        5,
-		Name:      "巨兽踩踏",
-		MovePoint: 1,
-		Money:     0,
-		Distance:  1,
-		NoTarget:  false,
-		Targets:   []int{4},
+		Id:              5,
+		Name:            "巨兽踩踏",
+		MovePoint:       1,
+		Money:           0,
+		Distance:        1,
+		NoTarget:        false,
+		TargetNoUnitPos: true,
 	}
 	return end
 }
@@ -230,26 +237,27 @@ func CrushMove() *Skill {
 // 犀牛技能：巨角冲撞 移动后对附近1距离的随机敌人造成1.5倍的攻击伤害
 func HornCrush() *Skill {
 	end := &Skill{
-		Id:        6,
-		Name:      "巨角冲撞",
-		MovePoint: 2,
-		Money:     0,
-		Distance:  1,
-		NoTarget:  false,
-		Targets:   []int{4},
+		Id:              6,
+		Name:            "巨角冲撞",
+		MovePoint:       2,
+		Money:           0,
+		Distance:        1,
+		NoTarget:        false,
+		TargetNoUnitPos: true,
 	}
 	return end
 }
 
 func NatureHealing() *Skill {
 	end := &Skill{
-		Id:        7,
-		Name:      "自然疗法",
-		MovePoint: 0,
-		Money:     0,
-		Distance:  2,
-		NoTarget:  false,
-		Targets:   []int{0, 3},
+		Id:             7,
+		Name:           "自然疗法",
+		MovePoint:      0,
+		Money:          0,
+		Distance:       2,
+		NoTarget:       false,
+		TargetTeamMate: true,
+		TargetSelf:     true,
 	}
 	return end
 }

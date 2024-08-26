@@ -17,7 +17,7 @@ func HippoHeroInit() *hero.Hero {
 		Price:          350,
 		ActionPoint:    1,
 		AreadyChose:    false,
-		Speed:          12,
+		Speed:          7,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Hippo

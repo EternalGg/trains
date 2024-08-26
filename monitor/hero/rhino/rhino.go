@@ -17,7 +17,7 @@ func RhinoHeroInit() *hero.Hero {
 		AttackPoint:    2,
 		ActionPoint:    1,
 		Price:          350,
-		Speed:          12,
+		Speed:          7,
 		PositiveSkills: []int{1, 2, 3, 4, 6},
 		AreadyChose:    false,
 	}

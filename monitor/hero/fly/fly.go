@@ -16,7 +16,7 @@ func FlyHeroInit() *hero.Hero {
 		AttackPoint:    1,
 		Price:          250,
 		ActionPoint:    1,
-		Speed:          8,
+		Speed:          7,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Fly

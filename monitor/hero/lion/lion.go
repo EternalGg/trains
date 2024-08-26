@@ -18,7 +18,7 @@ func LionHeroInit() *hero.Hero {
 		Price:       450,
 		ActionPoint: 10,
 
-		Speed:          8,
+		Speed:          6,
 		PositiveSkills: []int{1, 2, 3, 4},
 	}
 	return &Lion
