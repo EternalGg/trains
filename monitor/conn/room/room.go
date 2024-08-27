@@ -377,7 +377,7 @@ func (r *TestingGame) GameStart() {
 							r.GameState.Version++
 							n := notice.ActionToNotice([]notice.ActionData{*ad}, "登场", 4)
 							s, gs := ServerSession{}, GameSession{}
-							s.Type = 3
+							s.Type = 20
 							gs.GameDatatype = 11
 							jn, _ := json.Marshal(n)
 							gs.GameData = string(jn)
