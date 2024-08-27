@@ -395,7 +395,7 @@ func (r *TestingGame) GameStart() {
 						r.MonitorCenter.MonitorLogs = append(r.MonitorCenter.MonitorLogs, sale)
 						n := notice.ActionToNotice([]notice.ActionData{*sale}, "出售卡牌", 3)
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 20
 						gs.GameDatatype = 12
 						jsale, _ := json.Marshal(n)
 						gs.GameData = string(jsale)
@@ -409,7 +409,7 @@ func (r *TestingGame) GameStart() {
 						n := notice.ActionToNotice([]notice.ActionData{*buy}, "购买卡牌", 3)
 						r.GameState.Version++
 						s, gs := ServerSession{}, GameSession{}
-						s.Type = 3
+						s.Type = 20
 						gs.GameDatatype = 12
 						jbuy, _ := json.Marshal(n)
 						gs.GameData = string(jbuy)
